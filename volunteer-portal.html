@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Volunteer Portal</title>
+<link rel="stylesheet" href="reliefops.css">
+<style>
+.vol-hero{background:linear-gradient(135deg,var(--purple) 0%,var(--accent) 100%);border-radius:14px;padding:24px 28px;color:#fff;display:flex;align-items:center;gap:20px;margin-bottom:22px;box-shadow:0 6px 24px rgba(124,58,237,.3)}
+.vol-av{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:25px;font-weight:700;flex-shrink:0;border:3px solid rgba(255,255,255,.35)}
+.vol-name{font-size:19px;font-weight:700}
+.vol-meta{font-size:13px;opacity:.8;margin-top:3px}
+.vol-stats{margin-left:auto;display:flex;gap:24px;text-align:center}
+.vs-n{font-size:24px;font-weight:700}
+.vs-l{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.camp-hero{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px 22px;box-shadow:var(--sh);margin-bottom:20px}
+.camp-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.occ-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.occ-cell{background:var(--bg);border-radius:9px;padding:12px 14px;text-align:center}
+.occ-n{font-size:22px;font-weight:700}.occ-l{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+.bar-bg{height:8px;background:var(--border);border-radius:4px}.bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.shortage-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.shortage-row:last-child{border-bottom:none}
+.shortage-ico{width:36px;height:36px;border-radius:8px;background:var(--high-bg);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.shortage-info{flex:1;min-width:0}
+.shortage-name{font-size:13px;font-weight:600}
+.shortage-sub{font-size:11px;color:var(--muted)}
+.shortage-qty{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--severe);white-space:nowrap;margin-right:8px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.pill-active{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.pill-full{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd)}
+.pill-closed{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.pill-pending{background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd)}
+.pill-allocated{background:var(--moderate-bg);color:var(--moderate);border:1px solid var(--moderate-bd)}
+.pill-received{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.info-box{padding:11px 15px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:9px;margin-bottom:14px}
+.info-box svg{width:15px;height:15px;flex-shrink:0;margin-top:1px}
+.info-box.blue{background:var(--moderate-bg);color:#1d4ed8;border:1px solid var(--moderate-bd)}
+.info-box.amber{background:var(--high-bg);color:#92400e;border:1px solid var(--high-bd)}
+.info-box.green{background:var(--green-bg);color:#065f46;border:1px solid var(--green-bd)}
+.info-box.red{background:var(--severe-bg);color:#991b1b;border:1px solid var(--severe-bd)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:9000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.overlay.open{display:flex!important}
+.modal{background:#fff;border-radius:13px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);border:1px solid var(--border);z-index:9001}
+.modal-head{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-title{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-close:hover{background:var(--bg)}
+.modal-body{padding:18px 20px}
+.modal-footer{padding:13px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fafbff;border-radius:0 0 13px 13px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.fl{font-size:12px;font-weight:600}
+.fi{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:32px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.merr{display:none;margin-top:10px;padding:9px 12px;background:var(--severe-bg);border:1px solid var(--severe-bd);border-radius:7px;color:var(--severe);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:9px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+td{padding:10px 14px;border-bottom:1px solid #f1f4fa;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f8f9ff}
+#toast{position:fixed;bottom:24px;right:24px;background:#1a1d23;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);max-width:360px}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-mark">🛡️</div><div class="brand">Relief<em>Ops</em></div></div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:8px">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">My Work</div>
+      <a class="nav-item active" href="volunteer-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        My Camp
+      </a>
+      <a class="nav-item" href="camp-list.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        All Camps
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sb-footer"><a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center">Login</a></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🙋 Volunteer Portal</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › My Portal</div>
+    </div>
+    <div class="topbar-right" id="topbar-btns"></div>
+  </div>
+  <div class="content" id="content">
+    <div style="text-align:center;padding:80px 20px;color:var(--muted)">
+      <div style="font-size:36px;margin-bottom:12px">🙋</div>
+      <div>Loading portal…</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- OCCUPANCY MODAL -->
+<div class="overlay" id="m-occ">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">👥 Update Camp Occupancy</div>
+      <button class="modal-close" onclick="cm('m-occ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        If count equals or exceeds capacity, camp status becomes <strong>Full</strong>.
+      </div>
+      <div class="fg">
+        <label class="fl">Number of People Currently in Camp <span style="color:var(--severe)">*</span></label>
+        <input class="fi" type="number" id="f-occ" min="0">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px" id="occ-hint"></div>
+      </div>
+      <div class="merr" id="e-occ"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cm('m-occ')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOcc()">✓ Update Count</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHORTAGE MODAL -->
+<div class="overlay" id="m-sh">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">⚠️ Report Resource Shortage</div>
+      <button class="modal-close" onclick="cm('m-sh')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Admin will see this and allocate resources from the inventory pool to your camp.
+      </div>
+      <div class="fg">
+        <label class="fl">Resource Needed <span style="color:var(--severe)">*</span></label>
+        <select class="fi" id="f-sh-res" onchange="onResChange()"><option value="">Select resource…</option></select>
+      </div>
+      <div class="g2">
+        <div class="fg">
+          <label class="fl">Quantity Needed <span style="color:var(--severe)">*</span></label>
+          <input class="fi" type="number" id="f-sh-qty" min="1" placeholder="e.g. 50">
+        </div>
+        <div class="fg">
+          <label class="fl">Unit</label>
+          <input class="fi" id="f-sh-unit" readonly style="background:var(--bg);color:var(--muted)">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Remarks (optional)</label>
+        <input class="fi" id="f-sh-rem" placeholder="Urgency, notes…">
+      </div>
+      <div class="merr" id="e-sh"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cm('m-sh')">Cancel</button>
+      <button class="btn btn-warning" onclick="saveSh()" style="background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd)">⚠️ Submit Shortage</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM RECEIVED MODAL -->
+<div class="overlay" id="m-recv">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <div class="modal-title">✅ Confirm Resources Received</div>
+      <button class="modal-close" onclick="cm('m-recv')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirming receipt will automatically:<br>
+        <strong>1)</strong> Mark shortage as <strong>Received</strong><br>
+        <strong>2)</strong> Update allocation status to <strong>Received</strong><br>
+        <strong>3)</strong> Resource pool count was already reduced when admin dispatched.
+      </div>
+      <div style="background:var(--bg);border-radius:9px;padding:14px 16px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:5px" id="recv-name">—</div>
+        <div style="font-size:12px;color:var(--muted)" id="recv-info">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cm('m-recv')">Cancel</button>
+      <button class="btn btn-success" onclick="doReceive()" style="background:var(--green);color:#fff">✅ Confirm Received</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span id="toast-msg"></span></div>
+
+<script src="auth.js"></script>
+<script>
+const API = API_URL;
+const role = Auth.getRole();
+const uname = Auth.getName();
+const uid = Auth.getId();
+
+// Sidebar
+(function(){
+  if(!Auth.isLoggedIn()) return;
+  document.getElementById('sb-footer').innerHTML=
+    '<div class="user-pill">'+
+      '<div class="u-av" style="background:var(--purple)">'+(uname?uname.charAt(0).toUpperCase():'🙋')+'</div>'+
+      '<div><div class="u-name">'+esc(uname||'Volunteer')+'</div><div class="u-role">Volunteer</div></div>'+
+    '</div>'+
+    '<button class="logout-btn" onclick="logout()">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'+
+      'Logout'+
+    '</button>';
+})();
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+function om(id){document.getElementById(id).classList.add('open');}
+function merr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+function mclr(id){document.getElementById(id).style.display='none';}
+function toast(msg,dur=3500){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.style.display='flex';clearTimeout(t._t);
+  t._t=setTimeout(()=>{t.style.display='none';},dur);
+}
+
+let camp=null, shortages=[], allocations=[], resources=[];
+let recvSid=null, recvAid=null;
+let allCamps=[];
+let campId=parseInt(localStorage.getItem('vol_camp_id')||'0')||null;
+
+async function init(){
+  if(role!=='volunteer'&&role!=='admin'){
+    document.getElementById('content').innerHTML=
+      '<div class="info-box red" style="max-width:500px;margin:40px auto">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+
+        'Please <a href="login.html" style="color:var(--accent)">log in as a Volunteer</a> to access this portal.'+
+      '</div>';
+    return;
+  }
+
+  // First check assigned camp from profile
+  try {
+    const res = await fetch(API+'/api/volunteer/profile', {headers:{'X-Role':role,'X-User-Id':uid}});
+    const data = await res.json();
+    if(data.camp) {
+      campId = data.camp.camp_id;
+      localStorage.setItem('vol_camp_id', campId);
+    }
+  } catch(e) {}
+
+  // Load resources for dropdown
+  try{
+    const r=await fetch(API+'/api/resources');
+    const d=await r.json();
+    resources=d.resources||[];
+    buildResDropdown();
+  }catch(e){resources=[];}
+
+  // Load all camps
+  try{
+    const r=await fetch(API+'/api/camps');
+    const d=await r.json();
+    allCamps=(d.camps||[]).filter(c=>c.status!=='Closed');
+  }catch(e){allCamps=[];}
+
+  if(campId&&allCamps.find(c=>c.camp_id===campId)){
+    await loadCamp(campId);
+  } else {
+    renderPicker();
+  }
+}
+
+function renderPicker(){
+  document.getElementById('topbar-btns').innerHTML='';
+  document.getElementById('content').innerHTML=
+    '<div style="max-width:520px;margin:40px auto">'+
+      '<div class="card">'+
+        '<div class="card-head"><div class="card-title">🏕️ Select Your Camp</div></div>'+
+        '<div style="padding:20px">'+
+          '<div class="info-box blue">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+
+            'Select the relief camp you are assigned to manage.'+
+          '</div>'+
+          '<div class="fg">'+
+            '<label class="fl">Your Camp</label>'+
+            '<select class="fi" id="camp-sel">'+
+              '<option value="">— Choose a camp —</option>'+
+              allCamps.map(c=>'<option value="'+c.camp_id+'">'+esc(c.camp_name)+' — '+esc(c.location)+'</option>').join('')+
+            '</select>'+
+          '</div>'+
+          '<button class="btn btn-primary" onclick="pickCamp()" style="width:100%;justify-content:center">Go to My Camp →</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+}
+
+async function pickCamp(){
+  const id=parseInt(document.getElementById('camp-sel').value);
+  if(!id){toast('Please select a camp');return;}
+  localStorage.setItem('vol_camp_id',id);
+  campId=id;
+  await loadCamp(id);
+}
+
+async function loadCamp(id){
+  try{
+    const r=await fetch(API+'/api/camps/'+id);
+    const d=await r.json();
+    camp=d.camp;
+  }catch(e){toast('❌ Cannot connect to server. Is Flask running?');return;}
+  await Promise.all([fetchShortages(),fetchAllocations()]);
+  renderPortal();
+}
+
+async function fetchShortages(){
+  try{const r=await fetch(API+'/api/camps/'+campId+'/shortages',{headers:{'X-Role':role}});const d=await r.json();shortages=d.shortages||[];}
+  catch(e){shortages=[];}
+}
+async function fetchAllocations(){
+  try{const r=await fetch(API+'/api/allocations?camp_id='+campId);const d=await r.json();allocations=d.allocations||[];}
+  catch(e){allocations=[];}
+}
+
+function renderPortal(){
+  const c=camp;
+  const pct=c.total_capacity>0?Math.min(100,Math.round(c.current_occupancy/c.total_capacity*100)):0;
+  const avail=Math.max(0,c.total_capacity-c.current_occupancy);
+  const bc=pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)';
+  const spill=c.status==='Active'?'<span class="pill pill-active"><span class="dot"></span>Active</span>':c.status==='Full'?'<span class="pill pill-full"><span class="dot"></span>Full</span>':'<span class="pill pill-closed"><span class="dot"></span>Closed</span>';
+  const pendN=shortages.filter(s=>s.status==='Pending').length;
+  const allocN=shortages.filter(s=>s.status==='Allocated').length;
+
+  // Update occ modal hint
+  document.getElementById('occ-hint').textContent='Capacity: '+c.total_capacity+' · Current: '+c.current_occupancy;
+  document.getElementById('f-occ').value=c.current_occupancy;
+
+  // Topbar buttons
+  document.getElementById('topbar-btns').innerHTML=
+    '<button class="btn btn-ghost btn-sm" onclick="changeCamp()">🔄 Change Camp</button>'+
+    '<button class="btn btn-warning" onclick="openOcc()" style="background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd)">👥 Update Count</button>'+
+    '<button class="btn btn-primary" onclick="openSh()">⚠️ Report Shortage</button>';
+
+  // Alert banner if resources allocated and waiting
+  const alertBanner=allocN>0
+    ?'<div class="info-box green" style="margin-bottom:16px">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'+
+        '<div><strong>'+allocN+' resource'+(allocN>1?'s have':' has')+' been allocated and dispatched to your camp!</strong><br>Scroll down to the Shortages section and click "✅ Mark Received" to confirm.</div>'+
+      '</div>'
+    :'';
+
+  document.getElementById('content').innerHTML=
+    // Hero
+    '<div class="vol-hero">'+
+      '<div class="vol-av">'+(uname?uname.charAt(0).toUpperCase():'🙋')+'</div>'+
+      '<div>'+
+        '<div class="vol-name">'+esc(uname||'Volunteer')+'</div>'+
+        '<div class="vol-meta">Volunteer · '+esc(c.camp_name)+'</div>'+
+      '</div>'+
+      '<div class="vol-stats">'+
+        '<div><div class="vs-n" id="st-sh">'+shortages.length+'</div><div class="vs-l">Shortages</div></div>'+
+        '<div><div class="vs-n" id="st-pend">'+pendN+'</div><div class="vs-l">Pending</div></div>'+
+        '<div><div class="vs-n" id="st-alloc">'+allocations.length+'</div><div class="vs-l">Allocations</div></div>'+
+      '</div>'+
+    '</div>'+
+
+    alertBanner+
+
+    // Camp overview card
+    '<div class="camp-hero">'+
+      '<div class="camp-hero-top">'+
+        '<div>'+
+          '<div style="font-size:19px;font-weight:700;margin-bottom:4px">🏕️ '+esc(c.camp_name)+'</div>'+
+          '<div style="font-size:12px;color:var(--muted)">📍 '+esc(c.location)+(c.disaster_name?' · ⚠️ '+esc(c.disaster_name):'')+'</div>'+
+        '</div>'+
+        spill+
+      '</div>'+
+      '<div class="occ-grid">'+
+        '<div class="occ-cell"><div class="occ-n" style="color:var(--accent)">'+c.current_occupancy.toLocaleString()+'</div><div class="occ-l">Occupied</div></div>'+
+        '<div class="occ-cell"><div class="occ-n" style="color:var(--green)">'+avail.toLocaleString()+'</div><div class="occ-l">Available</div></div>'+
+        '<div class="occ-cell"><div class="occ-n" style="color:'+bc+'">'+pct+'%</div><div class="occ-l">Fill Rate</div></div>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px"><span>'+c.current_occupancy+'</span><span>Capacity: '+c.total_capacity+'</span></div>'+
+      '<div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div>'+
+    '</div>'+
+
+    // Two col: shortages + allocations
+    '<div class="two-col">'+
+      '<div>'+
+        '<div class="sec-head"><div class="sec-title">⚠️ Resource Shortages</div><button class="btn btn-primary btn-sm" onclick="openSh()">+ Report</button></div>'+
+        '<div class="card" id="sh-card">'+renderShHTML()+'</div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="sec-head"><div class="sec-title">📦 Resources Allocated to Camp</div></div>'+
+        '<div class="card" id="alloc-card">'+renderAllocHTML()+'</div>'+
+      '</div>'+
+    '</div>';
+}
+
+function renderShHTML(){
+  if(!shortages.length) return '<div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">No shortages yet.<br><br><button class="btn btn-primary btn-sm" onclick="openSh()">Report a shortage</button></div>';
+  return shortages.map(s=>{
+    const pill=s.status==='Received'?'<span class="pill pill-received"><span class="dot"></span>Received</span>':
+      s.status==='Allocated'?'<span class="pill pill-allocated"><span class="dot"></span>Allocated — Ready</span>':
+      '<span class="pill pill-pending"><span class="dot"></span>Pending</span>';
+    const ico=s.status==='Received'?'✅':s.status==='Allocated'?'📬':'📦';
+    const btn=s.status==='Allocated'
+      ?'<button class="btn btn-sm" style="background:var(--green);color:#fff;flex-shrink:0;margin-left:6px" onclick="openRecv('+s.shortage_id+')">✅ Mark Received</button>'
+      :'';
+    return '<div class="shortage-row">'+
+      '<div class="shortage-ico">'+ico+'</div>'+
+      '<div class="shortage-info">'+
+        '<div class="shortage-name">'+esc(s.resource_name||'Unknown')+'</div>'+
+        '<div class="shortage-sub">'+(s.remarks?esc(s.remarks)+' · ':'')+esc((s.reported_at||'').split('T')[0])+'</div>'+
+      '</div>'+
+      '<div class="shortage-qty">'+s.quantity_needed+' '+esc(s.unit||'')+'</div>'+
+      pill+btn+
+    '</div>';
+  }).join('');
+}
+
+function renderAllocHTML(){
+  if(!allocations.length) return '<div style="text-align:center;padding:28px;color:var(--muted);font-size:13px">No allocations yet.<br>Report a shortage so the admin can dispatch resources.</div>';
+  return '<table><thead><tr><th>Resource</th><th class="num-col">Qty</th><th class="center-col">Date</th><th class="center-col">Status</th></tr></thead><tbody>'+
+    allocations.map(a=>{
+      const pill=a.status==='Received'?'<span class="pill pill-received"><span class="dot"></span>Received</span>':'<span class="pill pill-allocated"><span class="dot"></span>Dispatched</span>';
+      return '<tr>'+
+        '<td><strong>'+esc(a.resource_name)+'</strong></td>'+
+        '<td class="num-col" style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;color:var(--green)">'+a.quantity_dispatched+' '+esc(a.unit)+'</td>'+
+        '<td class="center-col" style="color:var(--muted);font-size:12px">'+esc(a.allocation_date)+'</td>'+
+        '<td class="center-col">'+pill+'</td>'+
+      '</tr>';
+    }).join('')+
+  '</tbody></table>';
+}
+
+// ── OCCUPANCY ──
+function openOcc(){mclr('e-occ');om('m-occ');setTimeout(()=>document.getElementById('f-occ').focus(),80);}
+async function saveOcc(){
+  const count=parseInt(document.getElementById('f-occ').value);
+  if(isNaN(count)||count<0){merr('e-occ','Enter a valid number (0 or more).');return;}
+  try{
+    const r=await fetch(API+'/api/camps/'+campId+'/victims',{method:'PUT',headers:{'Content-Type':'application/json','X-Role':role,'X-User-Id':uid},body:JSON.stringify({count})});
+    const d=await r.json();
+    if(!r.ok){merr('e-occ',d.error||'Update failed');return;}
+    cm('m-occ');toast('✅ Occupancy updated to '+count);
+    await loadCamp(campId);
+  }catch(e){merr('e-occ','Cannot reach server. Is Flask running on port 5000?');}
+}
+
+// ── SHORTAGE ──
+function buildResDropdown(){
+  const s=document.getElementById('f-sh-res');
+  s.innerHTML='<option value="">Select resource…</option>'+
+    resources.map(r=>'<option value="'+r.resource_id+'" data-unit="'+esc(r.unit)+'">'+esc(r.resource_name)+' ('+esc(r.unit)+')</option>').join('');
+}
+function onResChange(){
+  const sel=document.getElementById('f-sh-res');
+  const opt=sel.options[sel.selectedIndex];
+  document.getElementById('f-sh-unit').value=(opt&&opt.dataset.unit)?opt.dataset.unit:'';
+}
+function openSh(){
+  mclr('e-sh');
+  document.getElementById('f-sh-res').value='';
+  document.getElementById('f-sh-qty').value='';
+  document.getElementById('f-sh-unit').value='';
+  document.getElementById('f-sh-rem').value='';
+  om('m-sh');
+  setTimeout(()=>document.getElementById('f-sh-res').focus(),80);
+}
+async function saveSh(){
+  const resId=document.getElementById('f-sh-res').value;
+  const qty=parseInt(document.getElementById('f-sh-qty').value);
+  const rem=document.getElementById('f-sh-rem').value.trim();
+  if(!resId){merr('e-sh','Please select a resource.');return;}
+  if(!qty||qty<1){merr('e-sh','Please enter a valid quantity (at least 1).');return;}
+  try{
+    const r=await fetch(API+'/api/camps/'+campId+'/shortages',{method:'POST',headers:{'Content-Type':'application/json','X-Role':role,'X-User-Id':uid},body:JSON.stringify({resource_id:parseInt(resId),quantity_needed:qty,remarks:rem})});
+    const d=await r.json();
+    if(!r.ok){merr('e-sh',d.error||'Failed to report shortage');return;}
+    cm('m-sh');toast('✅ Shortage reported — admin will be notified');
+    await fetchShortages();
+    document.getElementById('sh-card').innerHTML=renderShHTML();
+    document.getElementById('st-sh').textContent=shortages.length;
+    document.getElementById('st-pend').textContent=shortages.filter(s=>s.status==='Pending').length;
+  }catch(e){merr('e-sh','Cannot reach server. Is Flask running?');}
+}
+
+// ── MARK RECEIVED ──
+function openRecv(sid){
+  const s=shortages.find(x=>x.shortage_id===sid);
+  if(!s) return;
+  const a=allocations.find(x=>x.resource_id===s.resource_id&&x.status==='Dispatched');
+  recvSid=sid;
+  recvAid=a?a.allocation_id:null;
+  document.getElementById('recv-name').textContent=(s.resource_name||'Unknown')+' — '+s.quantity_needed+' '+(s.unit||'');
+  document.getElementById('recv-info').innerHTML=
+    '<strong>What happens when you confirm:</strong><br>'+
+    '① Shortage status → <strong>Received</strong><br>'+
+    '② Allocation status → <strong>Received</strong><br>'+
+    '③ Resource inventory was already reduced when admin dispatched';
+  om('m-recv');
+}
+
+async function doReceive(){
+  if(!recvSid) return;
+  try{
+    // Mark shortage received (this also updates matching allocation in backend)
+    const r=await fetch(API+'/api/shortages/'+recvSid+'/received',{method:'PUT',headers:{'X-Role':role,'X-User-Id':uid}});
+    const d=await r.json();
+    if(!r.ok){toast('❌ '+(d.error||'Failed'));cm('m-recv');return;}
+    cm('m-recv');
+    toast('✅ Resources received! Shortage resolved and allocation updated.');
+    await Promise.all([fetchShortages(),fetchAllocations()]);
+    document.getElementById('sh-card').innerHTML=renderShHTML();
+    document.getElementById('alloc-card').innerHTML=renderAllocHTML();
+    // update hero stats
+    document.getElementById('st-sh').textContent=shortages.length;
+    document.getElementById('st-pend').textContent=shortages.filter(s=>s.status==='Pending').length;
+    document.getElementById('st-alloc').textContent=allocations.length;
+    // Remove green alert banner if no more allocated
+    if(!shortages.some(s=>s.status==='Allocated')){
+      const banner=document.querySelector('.info-box.green');
+      if(banner&&banner.textContent.includes('allocated')) banner.remove();
+    }
+  }catch(e){toast('❌ Cannot reach server');cm('m-recv');}
+}
+
+function changeCamp(){localStorage.removeItem('vol_camp_id');campId=null;camp=null;renderPicker();}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')['m-occ','m-sh','m-recv'].forEach(cm);
+});
+['m-occ','m-sh','m-recv'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)cm(id);});
+});
+
+init();
+</script>
+</body>
+</html>

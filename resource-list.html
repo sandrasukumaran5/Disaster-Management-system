@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Resources</title>
+<link rel="stylesheet" href="reliefops.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-mark">🛡️</div><div class="brand">Relief<em>Ops</em></div></div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <a class="nav-item" href="disaster-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Disasters</a>
+    <a class="nav-item" href="camp-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Relief Camps</a>
+    <a class="nav-item active" href="resource-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Resources</a>
+    <a class="nav-item" href="resource-allocation.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg>Allocations</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finance</div>
+    <a class="nav-item" id="nav-donations" href="donation-list.html" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Donations</a>
+    <a class="nav-item" id="nav-donor" href="donor-portal.html" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/></svg>My Donations</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill"><div class="u-av" id="sb-av">??</div><div><div class="u-name" id="sb-name">Guest</div><div class="u-role" id="sb-role">Viewer</div></div></div>
+    <button class="logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">Resources</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › Resources</div>
+    </div>
+    <div class="topbar-right">
+      <a href="dashboard.html" class="btn btn-ghost">← Back</a>
+      <a href="resource-allocation.html" class="btn btn-warning" id="btn-allocate" style="display:none">📤 Allocate Resource</a>
+      <button class="btn btn-primary" id="btn-add" style="display:none" onclick="openAdd()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Resource
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- LOW STOCK BANNER -->
+    <div id="low-stock-banner" class="info-box red" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <span id="low-stock-text">Some resources are below minimum threshold and need attention.</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-l">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Search resources…" oninput="filterTable()">
+        </div>
+        <select class="filter-sel" id="f-cat" onchange="filterTable()">
+          <option value="">All Categories</option>
+          <option>Food</option><option>Medical</option><option>Shelter</option>
+          <option>Water</option><option>Equipment</option><option>Clothing</option><option>Other</option>
+        </select>
+        <select class="filter-sel" id="f-stock" onchange="filterTable()">
+          <option value="">All Stock</option>
+          <option value="low">Low Stock</option>
+          <option value="ok">OK</option>
+        </select>
+      </div>
+      <span class="count-lbl" id="count-lbl">0 resources</span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Resource Inventory</div>
+          <div class="card-sub">All quantities update automatically when donations come in or allocations go out</div>
+        </div>
+      </div>
+      <div id="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center-col">ID</th><th>Resource Name</th><th>Category</th><th class="center-col">Unit</th>
+              <th class="num-col">Available Qty</th><th class="num-col">Min Threshold</th><th class="center-col">Stock Status</th>
+              <th id="th-actions" style="display:none" class="center-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="res-tbody"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          <h3>No resources found</h3>
+          <p>No resources have been added yet or none match your filters.</p>
+          <button class="btn btn-primary" id="empty-add-btn" style="display:none" onclick="openAdd()">+ Add Resource</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="form-overlay" onclick="if(event.target===this)closeModal('form-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Add Resource</div>
+      <button class="modal-close" onclick="closeModal('form-overlay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg span2">
+          <label class="fl">Resource Name <span>*</span></label>
+          <input class="fi" type="text" id="f-name" placeholder="e.g. Drinking Water">
+        </div>
+        <div class="fg">
+          <label class="fl">Category <span>*</span></label>
+          <select class="fi" id="f-category">
+            <option value="">Select</option>
+            <option>Food</option><option>Medical</option><option>Shelter</option>
+            <option>Water</option><option>Equipment</option><option>Clothing</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Unit <span>*</span></label>
+          <input class="fi" type="text" id="f-unit" placeholder="e.g. Litres, Kits, Pieces">
+        </div>
+        <div class="fg">
+          <label class="fl">Initial Quantity <span>*</span></label>
+          <input class="fi" type="number" id="f-qty" min="0" placeholder="0">
+        </div>
+        <div class="fg">
+          <label class="fl">Min Threshold <span>*</span></label>
+          <input class="fi" type="number" id="f-threshold" min="0" placeholder="e.g. 100">
+          <div class="form-hint">Alert when quantity falls below this</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('form-overlay')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveResource()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="overlay" id="del-overlay" onclick="if(event.target===this)closeModal('del-overlay')">
+  <div class="modal del-modal">
+    <div class="del-body">
+      <div class="del-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></div>
+      <div class="del-title">Delete Resource?</div>
+      <div class="del-msg">Permanently delete <span class="del-name" id="del-name">"—"</span>?</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('del-overlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-txt"></span></div>
+
+<script src="auth.js"></script>
+<script>
+// ── ROLE — read from Auth ──
+var ROLE     = Auth.getRole();
+var isAdmin  = Auth.isAdmin();
+var NAME     = Auth.getName();
+
+// Sidebar
+Auth.renderUser();
+
+if(isAdmin){
+  var ba=document.getElementById('btn-add'); if(ba) ba.style.display='';
+  var bal=document.getElementById('btn-allocate'); if(bal) bal.style.display='';
+  var eab=document.getElementById('empty-add-btn'); if(eab) eab.style.display='';
+  var tha=document.getElementById('th-actions'); if(tha) tha.style.display='table-cell';
+}
+
+var editingId=null, deletingId=null, allRes=[];
+
+// ── API helper ──
+async function callAPI(path, method, body){
+  return api(path, method, body);
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function loadResources(){
+  try{
+    var d = await callAPI('/resources');
+    allRes = d.resources||[];
+    var lowCount = allRes.filter(function(r){ return r.quantity_available<=r.min_threshold; }).length;
+    if(lowCount>0){
+      document.getElementById('low-stock-banner').style.display='flex';
+      document.getElementById('low-stock-text').textContent=lowCount+' resource'+(lowCount>1?'s are':' is')+' below minimum threshold.';
+    } else {
+      document.getElementById('low-stock-banner').style.display='none';
+    }
+    filterTable();
+  }catch(e){
+    showToast(e.message||'Could not load resources','error');
+  }
+}
+
+function filterTable(){
+  var q   = document.getElementById('search').value.toLowerCase();
+  var cat = document.getElementById('f-cat').value;
+  var stk = document.getElementById('f-stock').value;
+  var filtered = allRes.filter(function(r){
+    var low = r.quantity_available<=r.min_threshold;
+    return (!q||r.resource_name.toLowerCase().includes(q)||r.category.toLowerCase().includes(q))
+      && (!cat||r.category===cat)
+      && (!stk||(stk==='low'?low:!low));
+  });
+  renderTable(filtered);
+}
+
+function renderTable(list){
+  var tbody = document.getElementById('res-tbody');
+  var empty = document.getElementById('empty-state');
+  var tbl   = document.querySelector('table');
+  tbody.innerHTML='';
+  if(!list.length){ tbl.style.display='none'; empty.style.display='block'; document.getElementById('count-lbl').textContent='0 resources'; return; }
+  tbl.style.display=''; empty.style.display='none';
+  document.getElementById('count-lbl').textContent=list.length+' resource'+(list.length!==1?'s':'');
+
+  list.forEach(function(r){
+    var low = r.quantity_available<=r.min_threshold;
+    var tr  = document.createElement('tr');
+    tr.innerHTML=
+      '<td class="id-mono center-col">R-'+String(r.resource_id).padStart(3,'0')+'</td>'+
+      '<td style="font-weight:600">'+esc(r.resource_name)+'</td>'+
+      '<td>'+esc(r.category)+'</td>'+
+      '<td class="id-mono center-col">'+esc(r.unit)+'</td>'+
+      '<td class="num-col" style="font-family:IBM Plex Mono,monospace;font-weight:600;color:'+(low?'var(--severe)':'var(--green)')+'">'+r.quantity_available+'</td>'+
+      '<td class="num-col id-mono">'+r.min_threshold+'</td>'+
+      '<td class="center-col">'+(low?'<span class="pill pill-severe"><span class="dot"></span>Low Stock</span>':'<span class="pill pill-active"><span class="dot"></span>OK</span>')+'</td>'+
+      (isAdmin?'<td class="center-col"><div class="actions" style="justify-content:center">'+
+        '<button class="icon-btn" title="Edit" onclick="openEdit('+r.resource_id+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'+
+        '<button class="icon-btn del" title="Delete" onclick="openDelete('+r.resource_id+',\''+esc(r.resource_name)+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'+
+      '</div></td>':'');
+    tbody.appendChild(tr);
+  });
+}
+
+function openAdd(){
+  if(!isAdmin){ showToast('Admin only','error'); return; }
+  editingId=null;
+  document.getElementById('modal-title').textContent='Add Resource';
+  ['f-name','f-unit','f-qty','f-threshold'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-category').value='';
+  openModal('form-overlay');
+}
+
+function openEdit(id){
+  if(!isAdmin){ showToast('Admin only','error'); return; }
+  var r = allRes.find(x=>x.resource_id===id);
+  if(!r) return;
+  editingId=id;
+  document.getElementById('modal-title').textContent='Edit Resource';
+  document.getElementById('f-name').value=r.resource_name;
+  document.getElementById('f-category').value=r.category;
+  document.getElementById('f-unit').value=r.unit;
+  document.getElementById('f-qty').value=r.quantity_available;
+  document.getElementById('f-threshold').value=r.min_threshold;
+  openModal('form-overlay');
+}
+
+async function saveResource(){
+  var name=document.getElementById('f-name').value.trim();
+  var cat=document.getElementById('f-category').value;
+  var unit=document.getElementById('f-unit').value.trim();
+  var qty=parseInt(document.getElementById('f-qty').value)||0;
+  var thr=parseInt(document.getElementById('f-threshold').value)||0;
+  if(!name||!cat||!unit){ showToast('Fill all required fields','error'); document.getElementById('save-btn').classList.add('shake'); setTimeout(()=>document.getElementById('save-btn').classList.remove('shake'),400); return; }
+  try{
+    var payload={resource_name:name,category:cat,unit:unit,quantity_available:qty,min_threshold:thr};
+    if(editingId){
+      await callAPI('/resources/'+editingId,'PUT',payload);
+    }else{
+      await callAPI('/resources','POST',payload);
+    }
+    showToast(editingId?'Resource updated ✓':'Resource added ✓');
+    closeModal('form-overlay'); loadResources();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+function openDelete(id,name){
+  if(!isAdmin){ showToast('Admin only','error'); return; }
+  deletingId=id; document.getElementById('del-name').textContent='"'+name+'"';
+  openModal('del-overlay');
+}
+
+async function confirmDelete(){
+  try{
+    await callAPI('/resources/'+deletingId,'DELETE');
+    showToast('Resource deleted');
+    closeModal('del-overlay'); loadResources();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal('form-overlay'); closeModal('del-overlay'); } });
+
+loadResources();
+</script>
+</body>
+</html>

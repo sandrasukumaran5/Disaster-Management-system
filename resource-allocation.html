@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Resource Allocations</title>
+<link rel="stylesheet" href="reliefops.css">
+<style>
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.sstrip-cell{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);}
+.sstrip-ico{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:18px;flex-shrink:0;}
+.sstrip-n{font-size:22px;font-weight:700;line-height:1;}
+.sstrip-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:2px;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.pill-dispatched{background:var(--high-bg);color:#92400e;border:1px solid var(--high-bd);}
+.pill-received-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.shortage-ref{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);background:var(--moderate-bg);border:1px solid var(--moderate-bd);padding:2px 8px;border-radius:12px;font-weight:600;}
+.info-banner{background:var(--moderate-bg);border:1px solid var(--moderate-bd);border-radius:10px;padding:12px 16px;font-size:13px;color:#1d4ed8;display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.info-banner svg{width:16px;height:16px;flex-shrink:0;}
+/* ── LOCAL CSS VARS (in case reliefops.css is missing) ── */
+:root{
+  --bg:#f0f2f8;--white:#fff;--border:#e2e6f0;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+  --severe:#ef4444;--severe-bg:#fef2f2;--severe-bd:#fecaca;
+  --high:#f59e0b;--high-bg:#fffbeb;--high-bd:#fde68a;
+  --moderate:#3b82f6;--moderate-bg:#eff6ff;--moderate-bd:#bfdbfe;
+  --green:#10b981;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --accent:#2563eb;--accent2:#1d4ed8;--purple:#7c3aed;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08);
+  --sidebar-w:240px;--header-h:58px;
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <nav style="flex:1;overflow-y:auto;padding-bottom:8px;">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Operations</div>
+      <a class="nav-item" href="disaster-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Disasters</a>
+      <a class="nav-item" href="camp-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Relief Camps</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Resources</div>
+      <a class="nav-item" href="resource-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Resource List</a>
+      <a class="nav-item active" href="resource-allocation.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Allocations</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Finance</div>
+      <a class="nav-item" href="donation-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Donations</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <a class="nav-item" href="admin-profile.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>Admin Profile</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer" id="sidebar-footer"></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📤 Resource Allocations</div>
+      <div class="breadcrumb"><a href="dashboard.html">Dashboard</a> › <a href="resource-list.html">Resources</a> › Allocations</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="loadAllocations()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <a href="admin-profile.html" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+        Admin Profile
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Server error banner -->
+    <div id="err-banner" style="display:none;background:#7f1d1d;color:#fecaca;padding:10px 16px;border-radius:9px;font-size:13px;margin-bottom:16px;display:none;align-items:center;gap:10px;">
+      <span id="err-msg"></span>
+      <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:rgba(255,255,255,.15);border:none;color:#fecaca;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:12px;">✕</button>
+    </div>
+
+    <div class="info-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Allocations are created from <strong>Admin Profile → Volunteer Requests → 📦 Allocate</strong>. This page is a live log of all dispatched resources.
+      Once a volunteer confirms receipt, status updates to <strong style="color:var(--green)">✅ Received</strong> here automatically.
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stat-strip">
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--moderate-bg)">📋</div>
+        <div><div class="sstrip-n" id="st-total">—</div><div class="sstrip-l">Total Allocations</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--high-bg)">🚚</div>
+        <div><div class="sstrip-n" id="st-dispatched" style="color:var(--high)">—</div><div class="sstrip-l">Dispatched</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--green-bg)">✅</div>
+        <div><div class="sstrip-n" id="st-received" style="color:var(--green)">—</div><div class="sstrip-l">Received</div></div>
+      </div>
+      <div class="sstrip-cell">
+        <div class="sstrip-ico" style="background:var(--severe-bg)">⚠️</div>
+        <div><div class="sstrip-n" id="st-shortage" style="color:var(--severe)">—</div><div class="sstrip-l">From Shortages</div></div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="toolbar">
+      <div class="toolbar-l">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Search resource, camp or admin…" oninput="renderTable()">
+        </div>
+        <select class="filter-sel" id="fil-status" onchange="renderTable()">
+          <option value="">All Statuses</option>
+          <option value="Dispatched">Dispatched</option>
+          <option value="Received">Received</option>
+        </select>
+        <select class="filter-sel" id="fil-type" onchange="renderTable()">
+          <option value="">All Types</option>
+          <option value="shortage">From Shortage Request</option>
+          <option value="manual">Manual Dispatch</option>
+        </select>
+      </div>
+      <span class="count-lbl" id="count-lbl">—</span>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th class="center-col">Alloc ID</th>
+            <th>Resource</th>
+            <th>Destination Camp</th>
+            <th class="num-col">Qty Dispatched</th>
+            <th class="center-col">Alloc Date</th>
+            <th class="center-col">Received On</th>
+            <th>Shortage Ref</th>
+            <th>Allocated By</th>
+            <th class="center-col">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">⏳ Loading…</td></tr>
+        </tbody>
+      </table>
+      <div id="empty" class="empty-state" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <h3>No allocations yet</h3>
+        <p>Go to <a href="admin-profile.html" style="color:var(--accent)">Admin Profile → Volunteer Requests</a> and click <strong>📦 Allocate</strong> on a pending shortage to create the first allocation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+/* ─────────────────────────────────────────────
+   FIX #1 — api() helper was completely missing
+   This is why the table was always blank.
+───────────────────────────────────────────── */
+const ROLE = Auth.getRole();
+const UID  = Auth.getId();
+const NAME = Auth.getName();
+
+async function api(path, method, body) {
+  const opts = {
+    method: method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Role':    ROLE,
+      'X-User-Id': UID
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  let res, text;
+  try {
+    res  = await fetch(API_URL + '/api' + path, opts);
+    text = await res.text();
+  } catch(e) {
+    showErr('Cannot reach Flask server at ' + API_URL + ' — make sure you ran: python app.py');
+    throw new Error('Server unreachable');
+  }
+  if (!text) throw new Error('Empty response');
+  let data;
+  try { data = JSON.parse(text); }
+  catch(e) {
+    showErr('Server returned non-JSON — is Flask running? Raw: ' + text.substring(0, 120));
+    throw new Error('Bad JSON');
+  }
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  hideErr();
+  return data;
+}
+
+function showErr(msg) {
+  const b = document.getElementById('err-banner');
+  document.getElementById('err-msg').textContent = '⚠️ ' + msg;
+  b.style.display = 'flex';
+}
+function hideErr() {
+  document.getElementById('err-banner').style.display = 'none';
+}
+
+/* ─────────────────────────────────────────────
+   FIX #2 — allocation_date vs received_on column
+   The old table had no "Received On" column.
+   Now we show it so admin can see when volunteer confirmed.
+───────────────────────────────────────────── */
+let allocations = [];
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function init() {
+  // Build sidebar footer
+  document.getElementById('sidebar-footer').innerHTML =
+    '<div class="user-pill">' +
+      '<div class="u-av">' + (NAME ? NAME.substring(0,2).toUpperCase() : '??') + '</div>' +
+      '<div><div class="u-name">' + esc(NAME||'') + '</div>' +
+          '<div class="u-role-lbl">' + esc(ROLE||'') + '</div></div>' +
+    '</div>' +
+    '<button class="logout-btn" onclick="logout()">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>' +
+        '<polyline points="16 17 21 12 16 7"/>' +
+        '<line x1="21" y1="12" x2="9" y2="12"/>' +
+      '</svg>Sign Out' +
+    '</button>';
+
+  await loadAllocations();
+}
+
+async function loadAllocations() {
+  document.getElementById('tbody').innerHTML =
+    '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">⏳ Loading…</td></tr>';
+  try {
+    const d = await api('/allocations');
+    allocations = d.allocations || [];
+
+    // Update stat strip
+    document.getElementById('st-total').textContent      = allocations.length;
+    document.getElementById('st-dispatched').textContent = allocations.filter(a => a.status === 'Dispatched').length;
+    document.getElementById('st-received').textContent   = allocations.filter(a => a.status === 'Received').length;
+    document.getElementById('st-shortage').textContent   = allocations.filter(a => a.shortage_id).length;
+
+    renderTable();
+  } catch(e) {
+    document.getElementById('tbody').innerHTML =
+      '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">' +
+      '🔌 Cannot reach Flask server — run <code>python app.py</code></td></tr>';
+  }
+}
+
+function renderTable() {
+  const q   = (document.getElementById('search').value || '').toLowerCase();
+  const st  = document.getElementById('fil-status').value;
+  const typ = document.getElementById('fil-type').value;
+
+  const filtered = allocations.filter(a => {
+    if (q && !a.resource_name.toLowerCase().includes(q) &&
+             !(a.camp_name||'').toLowerCase().includes(q) &&
+             !(a.allocated_by_name||'').toLowerCase().includes(q)) return false;
+    if (st  && a.status !== st) return false;
+    if (typ === 'shortage' && !a.shortage_id) return false;
+    if (typ === 'manual'   &&  a.shortage_id) return false;
+    return true;
+  });
+
+  document.getElementById('count-lbl').textContent =
+    `${filtered.length} allocation${filtered.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(a => {
+    /* ─── FIX #2 ─────────────────────────────────────
+       Status pill: Dispatched (amber) vs Received (green)
+       Also show received_on date if available.
+    ─────────────────────────────────────────────────── */
+    const pill = a.status === 'Received'
+      ? '<span class="pill pill-received-g"><span class="dot"></span>✅ Received</span>'
+      : '<span class="pill pill-dispatched"><span class="dot"></span>🚚 Dispatched</span>';
+
+    const shortageRef = a.shortage_id
+      ? `<span class="shortage-ref">⚠️ SH-${String(a.shortage_id).padStart(3,'0')}</span>`
+      : `<span style="font-size:11px;color:var(--subtle)">— Manual</span>`;
+
+    // received_on: shown only when status is Received
+    const receivedOn = a.status === 'Received' && a.received_on
+      ? `<span style="font-size:12px;color:var(--green);font-weight:600">${esc(a.received_on)}</span>`
+      : `<span style="font-size:11px;color:var(--subtle)">—</span>`;
+
+    return `<tr>
+      <td class="center-col" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:var(--accent)">
+        AL-${String(a.allocation_id).padStart(3,'0')}
+      </td>
+      <td>
+        <div style="font-weight:600">${esc(a.resource_name)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(a.unit||'')}</div>
+      </td>
+      <td>
+        <div style="font-weight:600">${esc(a.camp_name||'—')}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(a.location||'')}</div>
+      </td>
+      <td class="num-col">
+        <span style="font-weight:700;font-size:15px;color:var(--text)">${Number(a.quantity_dispatched).toLocaleString()}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:3px">${esc(a.unit||'')}</span>
+      </td>
+      <td class="center-col" style="color:var(--muted);font-size:12px">${esc(a.allocation_date||'—')}</td>
+      <td class="center-col">${receivedOn}</td>
+      <td>${shortageRef}</td>
+      <td style="font-size:12px;color:var(--muted)">${esc(a.allocated_by_name||'—')}</td>
+      <td class="center-col">${pill}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+init();
+</script>
+</body>
+</html>

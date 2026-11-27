@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Admin Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f8;--white:#fff;--border:#e2e6f0;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+  --severe:#ef4444;--severe-bg:#fef2f2;--severe-bd:#fecaca;
+  --high:#f59e0b;--high-bg:#fffbeb;--high-bd:#fde68a;
+  --moderate:#3b82f6;--moderate-bg:#eff6ff;--moderate-bd:#bfdbfe;
+  --green:#10b981;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --accent:#2563eb;--accent2:#1d4ed8;--purple:#7c3aed;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.13);
+  --sidebar-w:240px;--header-h:58px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;}
+.sidebar-logo{height:var(--header-h);display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);}
+.logo-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-size:15px;}
+.brand{font-size:15px;font-weight:600;} .brand em{color:var(--accent);font-style:normal;}
+.nav-section{padding:14px 12px 6px;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;text-decoration:none;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:#eff6ff;color:var(--accent);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);}
+.user-pill{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:8px;}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;flex-shrink:0;}
+.u-name{font-size:12.5px;font-weight:600;} .u-role-lbl{font-size:11px;color:var(--muted);}
+.logout-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;}
+.logout-btn:hover{background:var(--severe-bg);color:var(--severe);}
+.logout-btn svg{width:14px;height:14px;}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:var(--sh);position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:15px;font-weight:600;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{padding:24px 28px 48px;flex:1;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);} .btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);} .btn-success:hover{background:#d1fae5;}
+.btn-danger{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);} .btn-danger:hover{background:#fee2e2;}
+.btn-warn{background:var(--high-bg);color:#92400e;border:1px solid var(--high-bd);} .btn-warn:hover{background:#fde68a;}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-xs{padding:3px 8px;font-size:11px;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.pill-pending{background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd);}
+.pill-completed,.pill-accepted{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.pill-rejected{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);}
+.pill-allocated{background:var(--moderate-bg);color:var(--moderate);border:1px solid var(--moderate-bd);}
+.pill-received{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.pill-admin{background:linear-gradient(135deg,#ede9fe,#dbeafe);color:var(--accent);border:1px solid #c4b5fd;}
+.profile-hero{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:0;margin-bottom:22px;box-shadow:var(--sh-md);overflow:hidden;}
+.profile-hero-banner{height:80px;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 45%,#7c3aed 100%);}
+.profile-hero-body{padding:0 24px 22px;display:flex;align-items:flex-end;gap:18px;position:relative;}
+.profile-avatar-wrap{margin-top:-28px;flex-shrink:0;}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;border:3px solid var(--white);box-shadow:var(--sh-md);}
+.profile-info{flex:1;padding-top:14px;}
+.profile-info h2{font-size:19px;font-weight:700;margin-bottom:5px;}
+.profile-info .meta{font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+.profile-info .meta span{display:flex;align-items:center;gap:5px;}
+.profile-actions{display:flex;gap:8px;align-items:center;padding-top:14px;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-box{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.stat-box-accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;}
+.stat-box-icon{font-size:22px;margin-bottom:6px;}
+.stat-box-val{font-size:26px;font-weight:700;line-height:1;}
+.stat-box-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:3px;}
+.tab-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab-btn{padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;position:relative;transition:color .15s;display:flex;align-items:center;gap:7px;}
+.tab-btn::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s;}
+.tab-btn.active{color:var(--accent);} .tab-btn.active::after{transform:scaleX(1);}
+.tab-btn:hover{color:var(--text);}
+.tab-badge{background:var(--severe);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
+.tab-badge.green{background:var(--green);}
+.tab-pane{display:none;} .tab-pane.active{display:block;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--sh);margin-bottom:18px;}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbff;}
+.card-title{font-size:13.5px;font-weight:600;} .card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap;}
+td{padding:11px 14px;border-bottom:1px solid #f1f4fa;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f8f9ff;}
+.empty-row{text-align:center;color:var(--muted);font-size:13px;padding:40px;}
+.empty-row .empty-icon{font-size:32px;margin-bottom:8px;}
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:16px;}
+.res-card{border:1px solid var(--border);border-radius:10px;padding:14px;transition:box-shadow .15s;background:#fafbff;}
+.res-card:hover{box-shadow:var(--sh-md);}
+.res-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.res-category{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+.res-qty-bar{height:5px;border-radius:3px;background:#e5e7eb;margin-bottom:6px;overflow:hidden;}
+.res-qty-fill{height:100%;border-radius:3px;transition:width .4s;}
+.res-qty-fill.ok{background:var(--green);} .res-qty-fill.warn{background:var(--high);} .res-qty-fill.low{background:var(--severe);}
+.res-qty-num{font-size:18px;font-weight:700;} .res-qty-unit{font-size:11px;color:var(--muted);}
+.res-threshold{font-size:11px;color:var(--muted);margin-top:2px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:13px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.modal-close:hover{background:var(--bg);} .modal-close svg{width:16px;height:16px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fafbff;border-radius:0 0 13px 13px;}
+.modal-info-row{display:flex;gap:12px;margin-bottom:16px;background:var(--bg);border-radius:9px;padding:12px 14px;}
+.modal-info-item{flex:1;}
+.modal-info-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.modal-info-val{font-size:13px;font-weight:600;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.span2{grid-column:1/-1;}
+.fl{font-size:12px;font-weight:600;color:var(--text);}
+.fl .req{color:var(--severe);margin-left:2px;}
+.fi{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.fi::placeholder{color:#c0c7d4;} .fi[readonly]{opacity:.65;cursor:not-allowed;}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:32px;}
+.form-hint{font-size:11px;color:var(--muted);}
+.stock-indicator{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;margin-top:4px;}
+.stock-ok{background:var(--green-bg);color:var(--green);} .stock-low{background:var(--severe-bg);color:var(--severe);}
+.sec-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--text);}
+.sec-title::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1d23;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);max-width:340px;}
+.toast.show{display:flex;animation:slideUp .22s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all .15s;}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.chip:hover:not(.active){background:var(--bg);color:var(--text);}
+.diff{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;}
+.diff-down{background:#fef2f2;color:#dc2626;} .diff-up{background:#ecfdf5;color:#059669;}
+.actions{display:flex;gap:5px;align-items:center;}
+.num-col{text-align:right;}
+.search-wrap{position:relative;}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--subtle);}
+.search-inp{padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:7px;font-size:12.5px;font-family:inherit;background:var(--white);color:var(--text);outline:none;width:200px;}
+.search-inp:focus{border-color:var(--accent);}
+
+/* ── FIX #4 — new "Received" banner style ── */
+.recv-banner{background:var(--green-bg);border:1px solid var(--green-bd);border-radius:10px;padding:12px 16px;font-size:13px;color:#065f46;display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.recv-banner svg{width:16px;height:16px;flex-shrink:0;color:var(--green);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🛡️</div>
+    <div class="brand">Relief<em>Ops</em></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <a class="nav-item" href="disaster-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Disasters
+    </a>
+    <a class="nav-item" href="camp-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Relief Camps
+    </a>
+    <a class="nav-item" href="resource-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Resources
+    </a>
+    <a class="nav-item" href="resource-allocation.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Allocations
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finance</div>
+    <a class="nav-item" href="donation-list.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Donations
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Account</div>
+    <a class="nav-item active" href="admin-profile.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>My Profile
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="u-av" id="sb-av">AD</div>
+      <div>
+        <div class="u-name" id="sb-name">Admin</div>
+        <div class="u-role-lbl">Administrator</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">Admin Profile</div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="refreshAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Refresh
+      </button>
+      <button class="btn btn-primary" onclick="openEditProfile()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- PROFILE HERO -->
+    <div class="profile-hero">
+      <div class="profile-hero-banner"></div>
+      <div class="profile-hero-body">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="p-avatar">AD</div>
+        </div>
+        <div class="profile-info">
+          <h2 id="p-name">Loading…</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="pill pill-admin">⚡ Administrator</span>
+            <span id="p-org-tag" style="display:none;" class="pill">—</span>
+          </div>
+          <div class="meta">
+            <span>📧 <span id="p-email">—</span></span>
+            <span>📱 <span id="p-phone">—</span></span>
+            <span>📅 Joined: <span id="p-joined">—</span></span>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <a href="resource-allocation.html" class="btn btn-ghost btn-sm">📦 Allocations</a>
+          <a href="donation-list.html" class="btn btn-ghost btn-sm">💳 Donations</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-box-accent" style="background:var(--severe);"></div>
+        <div class="stat-box-icon">🔥</div>
+        <div class="stat-box-val" id="s-disasters" style="color:var(--severe)">—</div>
+        <div class="stat-box-lbl">Active Disasters</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-accent" style="background:var(--green);"></div>
+        <div class="stat-box-icon">🏕️</div>
+        <div class="stat-box-val" id="s-camps" style="color:var(--green)">—</div>
+        <div class="stat-box-lbl">Active Camps</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-accent" style="background:var(--high);"></div>
+        <div class="stat-box-icon">⚠️</div>
+        <div class="stat-box-val" id="s-shortages" style="color:var(--high)">—</div>
+        <div class="stat-box-lbl">Pending Shortages</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-accent" style="background:var(--accent);"></div>
+        <div class="stat-box-icon">💰</div>
+        <div class="stat-box-val" id="s-donations" style="color:var(--accent)">—</div>
+        <div class="stat-box-lbl">Pending Donations</div>
+      </div>
+    </div>
+
+    <!-- ── FIX #5: "Received" notification banner (shown when volunteers have confirmed) ── -->
+    <div class="recv-banner" id="recv-banner" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <div>
+        <strong id="recv-banner-text">Resources have been confirmed received by volunteers.</strong>
+        <a href="resource-allocation.html" style="color:var(--green);font-weight:600;margin-left:8px;">View in Allocations →</a>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('shortages',this)" id="tab-shortages-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Volunteer Requests <span class="tab-badge" id="badge-shortages">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('donations',this)" id="tab-donations-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Donor Applications <span class="tab-badge green" id="badge-donations">0</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('resources',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Resource Inventory
+      </button>
+    </div>
+
+    <!-- TAB: VOLUNTEER SHORTAGE REQUESTS -->
+    <div class="tab-pane active" id="tab-shortages">
+      <div class="sec-title">⚠️ Volunteer Shortage Requests</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Resource Shortage Requests</div>
+            <div class="card-sub">Allocate from inventory · Stock decreases on dispatch · Status updates when volunteer confirms receipt</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="filter-chips" id="shortage-filter">
+              <span class="chip active"  onclick="filterShortages('Pending',this)">Pending</span>
+              <span class="chip"         onclick="filterShortages('Allocated',this)">Allocated</span>
+              <span class="chip"         onclick="filterShortages('Received',this)">Received</span>
+              <span class="chip"         onclick="filterShortages('all',this)">All</span>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Camp</th>
+              <th>Resource</th>
+              <th class="num-col">Qty Needed</th>
+              <th>Reported By</th>
+              <th>Remarks</th>
+              <th>Reported At</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="shortage-tbody">
+            <tr><td colspan="8" class="empty-row"><div class="empty-icon">⏳</div>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: DONOR APPLICATIONS -->
+    <div class="tab-pane" id="tab-donations">
+      <div class="sec-title">💰 Donor Donation Applications</div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Donation Applications</div>
+            <div class="card-sub">Accept → resource count increases · Reject → no change</div>
+          </div>
+          <div class="filter-chips" id="donation-filter">
+            <span class="chip active" onclick="filterDonations('Pending',this)">Pending</span>
+            <span class="chip"        onclick="filterDonations('Completed',this)">Accepted</span>
+            <span class="chip"        onclick="filterDonations('Rejected',this)">Rejected</span>
+            <span class="chip"        onclick="filterDonations('all',this)">All</span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Donor</th>
+              <th>Resource</th>
+              <th class="num-col">Qty</th>
+              <th>Date</th>
+              <th>Remarks</th>
+              <th>Status</th>
+              <th>Inventory Effect</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="donation-tbody">
+            <tr><td colspan="8" class="empty-row"><div class="empty-icon">⏳</div>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: RESOURCE INVENTORY -->
+    <div class="tab-pane" id="tab-resources">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="sec-title" style="margin-bottom:0;">📦 Resource Inventory</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-inp" id="res-search" placeholder="Search resources…" oninput="renderResources()">
+          </div>
+          <select class="fi" style="width:auto;font-size:12px;padding:6px 28px 6px 10px;" id="res-category" onchange="renderResources()">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <div class="resource-grid" id="resource-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">⏳ Loading inventory…</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ALLOCATE MODAL -->
+<div class="overlay" id="alloc-overlay" onclick="if(event.target===this)closeModal('alloc-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">📦 Allocate Resource to Camp</div>
+      <button class="modal-close" onclick="closeModal('alloc-overlay')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info-row" id="alloc-info-row">
+        <div class="modal-info-item"><div class="modal-info-label">Camp</div><div class="modal-info-val" id="alloc-camp-name">—</div></div>
+        <div class="modal-info-item"><div class="modal-info-label">Resource</div><div class="modal-info-val" id="alloc-res-name">—</div></div>
+        <div class="modal-info-item"><div class="modal-info-label">Needed</div><div class="modal-info-val" style="color:var(--severe)" id="alloc-needed">—</div></div>
+      </div>
+      <div id="alloc-stock-row" style="margin-bottom:16px;"></div>
+      <div class="form-grid">
+        <input type="hidden" id="alloc-shortage-id">
+        <input type="hidden" id="alloc-resource-id">
+        <input type="hidden" id="alloc-camp-id">
+        <div class="fg span2">
+          <label class="fl">Quantity to Dispatch <span class="req">*</span></label>
+          <input class="fi" type="number" id="alloc-qty" min="1" placeholder="Enter quantity" oninput="updateAllocPreview()">
+          <div class="form-hint">Available in stock: <strong id="alloc-stock-avail">—</strong></div>
+        </div>
+        <div class="fg span2">
+          <label class="fl">Allocation Date <span class="req">*</span></label>
+          <input class="fi" type="date" id="alloc-date">
+        </div>
+        <div class="fg span2">
+          <label class="fl">Notes</label>
+          <input class="fi" type="text" id="alloc-notes" placeholder="Optional dispatch notes">
+        </div>
+      </div>
+      <div id="alloc-preview" style="display:none;margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--severe-bg);border:1px solid var(--severe-bd);">
+        <div style="font-size:12px;font-weight:600;color:var(--severe);margin-bottom:4px;">⚡ Stock Impact Preview</div>
+        <div style="font-size:13px;color:var(--text);" id="alloc-preview-text"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('alloc-overlay')">Cancel</button>
+      <button class="btn btn-primary" id="alloc-submit-btn" onclick="confirmAllocate()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>Dispatch Resource
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="overlay" id="edit-overlay" onclick="if(event.target===this)closeModal('edit-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">✏️ Edit Profile</div>
+      <button class="modal-close" onclick="closeModal('edit-overlay')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg span2"><label class="fl">Full Name <span class="req">*</span></label><input class="fi" type="text" id="e-name" placeholder="Your full name"></div>
+        <div class="fg"><label class="fl">Phone</label><input class="fi" type="tel" id="e-phone" placeholder="+91 98765 43210"></div>
+        <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="e-email" readonly></div>
+        <div class="fg span2"><label class="fl">Organization</label><input class="fi" type="text" id="e-org" placeholder="Your organization"></div>
+        <div class="fg span2"><label class="fl">New Password</label><input class="fi" type="password" id="e-password" placeholder="Leave blank to keep current"><div class="form-hint">Only fill if you want to change your password</div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('edit-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Server error banner -->
+<div id="server-banner" style="display:none;position:fixed;top:0;left:var(--sidebar-w);right:0;background:#7f1d1d;color:#fecaca;padding:10px 20px;font-size:13px;font-weight:500;z-index:500;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+  <span id="server-banner-msg"></span>
+  <button onclick="document.getElementById('server-banner').style.display='none'" style="margin-left:auto;background:rgba(255,255,255,.15);border:none;color:#fecaca;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:12px;">✕ Dismiss</button>
+</div>
+
+<div class="toast" id="toast">
+  <svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-txt"></span>
+</div>
+
+<script src="auth.js"></script>
+<script>
+// ── AUTH GUARD ──
+var ROLE = Auth.getRole();
+var UID  = Auth.getId();
+var NAME = Auth.getName();
+if (ROLE !== 'admin') { window.location.href = 'login.html'; }
+Auth.renderUser();
+
+// ── STATE ──
+var allShortages = [];
+var allDonations = [];
+var allResources = [];
+var currentShortageFilter = 'Pending';
+var currentDonationFilter = 'Pending';
+
+// ── UTILS ──
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeModal('alloc-overlay'); closeModal('edit-overlay'); }
+});
+
+function showToast(msg, type) {
+  var t   = document.getElementById('toast');
+  var ico = document.getElementById('toast-ico');
+  var txt = document.getElementById('toast-txt');
+  if (!t) return;
+  if (ico) ico.style.color = type==='error' ? '#f87171' : type==='warn' ? '#fbbf24' : '#4ade80';
+  if (txt) txt.innerHTML = msg;
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 4000);
+}
+
+async function callAPI(path, method, body) {
+  var opts = { method: method||'GET', headers: {'Content-Type':'application/json','X-Role':ROLE,'X-User-Id':UID} };
+  if (body) opts.body = JSON.stringify(body);
+  var res, text;
+  try {
+    res  = await fetch(API_URL + '/api' + path, opts);
+    text = await res.text();
+  } catch(e) {
+    showServerBanner('Cannot reach Flask server at ' + API_URL + ' — make sure you ran: python app.py');
+    throw new Error('Server unreachable');
+  }
+  if (!text) throw new Error('Empty response');
+  var data;
+  try { data = JSON.parse(text); }
+  catch(e) {
+    showServerBanner('Server returned non-JSON. Is Flask running? Raw: ' + text.substring(0, 120));
+    throw new Error('Bad JSON');
+  }
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  hideServerBanner();
+  return data;
+}
+
+function showServerBanner(msg) {
+  var b = document.getElementById('server-banner');
+  document.getElementById('server-banner-msg').textContent = '⚠️ ' + msg;
+  if (b) b.style.display = 'flex';
+}
+function hideServerBanner() {
+  var b = document.getElementById('server-banner');
+  if (b) b.style.display = 'none';
+}
+
+// ── TABS ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b)  { b.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── PROFILE ──
+async function loadProfile() {
+  try {
+    var d = await callAPI('/profile');
+    var u = d.user;
+    document.getElementById('p-name').textContent   = u.full_name;
+    document.getElementById('p-email').textContent  = u.email;
+    document.getElementById('p-phone').textContent  = u.phone || '—';
+    document.getElementById('p-joined').textContent = u.joined_date || '—';
+    document.getElementById('p-avatar').textContent = u.full_name.substring(0,2).toUpperCase();
+    document.getElementById('sb-av').textContent    = u.full_name.substring(0,2).toUpperCase();
+    document.getElementById('sb-name').textContent  = u.full_name;
+    if (u.organization) {
+      var orgTag = document.getElementById('p-org-tag');
+      orgTag.style.display = 'inline-flex';
+      orgTag.textContent   = '🏢 ' + u.organization;
+    }
+  } catch(e) { console.warn('Profile load failed', e); }
+}
+
+// ── STATS ──
+async function loadStats() {
+  try {
+    var d = await callAPI('/stats');
+    document.getElementById('s-disasters').textContent = d.active_disasters || 0;
+    document.getElementById('s-camps').textContent     = d.active_camps || 0;
+    document.getElementById('s-shortages').textContent = d.pending_shortages || 0;
+    document.getElementById('s-donations').textContent = d.pending_donations || 0;
+    document.getElementById('badge-shortages').textContent = d.pending_shortages || 0;
+    document.getElementById('badge-donations').textContent = d.pending_donations || 0;
+  } catch(e) { console.warn('Stats failed', e); }
+}
+
+// ── SHORTAGE FILTER ──
+function filterShortages(status, chipEl) {
+  currentShortageFilter = status;
+  document.querySelectorAll('#shortage-filter .chip').forEach(function(c) { c.classList.remove('active'); });
+  if (chipEl) chipEl.classList.add('active');
+  renderShortages();
+}
+
+async function loadShortages() {
+  try {
+    var d = await callAPI('/shortages');
+    allShortages = d.shortages || [];
+
+    // ── FIX #5: show received banner if any shortages were recently received ──
+    var receivedCount = allShortages.filter(function(s) { return s.status === 'Received'; }).length;
+    var recvBanner = document.getElementById('recv-banner');
+    if (receivedCount > 0) {
+      document.getElementById('recv-banner-text').textContent =
+        receivedCount + ' resource request' + (receivedCount > 1 ? 's have' : ' has') +
+        ' been confirmed received by volunteers.';
+      recvBanner.style.display = 'flex';
+    } else {
+      recvBanner.style.display = 'none';
+    }
+
+    renderShortages();
+  } catch(e) {
+    document.getElementById('shortage-tbody').innerHTML =
+      '<tr><td colspan="8" class="empty-row"><div class="empty-icon">🔌</div>Cannot reach Flask server — run <code>python app.py</code></td></tr>';
+  }
+}
+
+function renderShortages() {
+  var list = currentShortageFilter === 'all'
+    ? allShortages
+    : allShortages.filter(function(s) { return s.status === currentShortageFilter; });
+
+  var tbody = document.getElementById('shortage-tbody');
+  if (!list.length) {
+    var emojis = {Pending:'✅',Allocated:'📦',Received:'🎉',all:'📋'};
+    var msgs   = {
+      Pending:   'No pending shortage requests — all handled!',
+      Allocated: 'No allocated shortages yet. Click <strong>📦 Allocate</strong> on a Pending request.',
+      Received:  'No received confirmations yet.',
+      all:       'No shortage requests found.'
+    };
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">' +
+      '<div class="empty-icon">' + (emojis[currentShortageFilter]||'📋') + '</div>' +
+      (msgs[currentShortageFilter]||'No data') + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(function(s) {
+    var statusClass = s.status === 'Allocated' ? 'pill-allocated'
+                    : s.status === 'Received'  ? 'pill-received'
+                    : 'pill-pending';
+    var statusLabel = s.status;
+    var actionBtn   = '';
+
+    if (s.status === 'Pending') {
+      actionBtn = '<button class="btn btn-warn btn-xs" onclick="openAllocate(' + JSON.stringify(s) + ')">📦 Allocate</button>';
+    } else if (s.status === 'Allocated') {
+      // ── FIX #4: show waiting-for-volunteer feedback ──
+      actionBtn = '<span style="font-size:11px;color:var(--moderate);font-weight:600;">🚚 Awaiting volunteer confirmation</span>';
+    } else if (s.status === 'Received') {
+      actionBtn = '<span style="font-size:11px;color:var(--green);font-weight:600;">✅ Confirmed by volunteer</span>';
+    }
+
+    return '<tr>' +
+      '<td style="font-weight:600">' + esc(s.camp_name) + '</td>' +
+      '<td>' + esc(s.resource_name) + '</td>' +
+      '<td class="num-col" style="font-weight:700;color:var(--severe)">' + s.quantity_needed +
+        ' <span style="font-size:11px;font-weight:400;color:var(--muted)">' + esc(s.unit||'') + '</span></td>' +
+      '<td style="font-size:12px">' + esc(s.reported_by_name||'—') + '</td>' +
+      '<td style="font-size:12px;color:var(--muted);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(s.remarks||'—') + '</td>' +
+      '<td style="font-size:12px;white-space:nowrap">' + esc((s.reported_at||'').split(' ')[0]) + '</td>' +
+      '<td><span class="pill ' + statusClass + '"><span class="dot"></span>' + esc(statusLabel) + '</span></td>' +
+      '<td><div class="actions">' + actionBtn + '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ── OPEN ALLOCATE MODAL ──
+async function openAllocate(shortage) {
+  document.getElementById('alloc-shortage-id').value = shortage.shortage_id;
+  document.getElementById('alloc-resource-id').value = shortage.resource_id;
+  document.getElementById('alloc-camp-id').value     = shortage.camp_id;
+  document.getElementById('alloc-camp-name').textContent = shortage.camp_name;
+  document.getElementById('alloc-res-name').textContent  = shortage.resource_name;
+  document.getElementById('alloc-needed').textContent    = shortage.quantity_needed + ' ' + (shortage.unit||'');
+  document.getElementById('alloc-qty').value   = shortage.quantity_needed;
+  document.getElementById('alloc-date').value  = new Date().toISOString().split('T')[0];
+  document.getElementById('alloc-notes').value = '';
+  document.getElementById('alloc-preview').style.display = 'none';
+
+  if (!allResources.length) { await loadResources(); }
+
+  var res   = allResources.find(function(r) { return r.resource_id == shortage.resource_id; });
+  var avail = res ? res.quantity_available : 0;
+  document.getElementById('alloc-stock-avail').textContent = avail + ' ' + (res ? res.unit : '');
+
+  var stockEl = document.getElementById('alloc-stock-row');
+  if (res) {
+    var low   = avail <= res.min_threshold;
+    var cls   = avail <= 0 ? 'stock-low' : low ? 'stock-low' : 'stock-ok';
+    var icon  = avail <= 0 ? '🚫' : low ? '⚠️' : '✅';
+    var label = avail <= 0 ? ' — OUT OF STOCK' : low ? ' — LOW STOCK' : '';
+    stockEl.innerHTML = '<div class="stock-indicator ' + cls + '">' + icon + ' Current Stock: ' + avail + ' ' + esc(res.unit||'') + label + '</div>';
+  } else {
+    stockEl.innerHTML = '<div class="stock-indicator stock-low">⚠️ Resource not found in inventory</div>';
+  }
+
+  openModal('alloc-overlay');
+  updateAllocPreview();
+}
+
+function updateAllocPreview() {
+  var qty   = parseInt(document.getElementById('alloc-qty').value) || 0;
+  var avail = parseInt((document.getElementById('alloc-stock-avail').textContent||'').split(' ')[0]) || 0;
+  var prev  = document.getElementById('alloc-preview');
+  var txt   = document.getElementById('alloc-preview-text');
+  if (qty > 0) {
+    prev.style.display = 'block';
+    var after = avail - qty;
+    var clr   = after < 0 ? 'var(--severe)' : after < 10 ? 'var(--high)' : 'var(--green)';
+    txt.innerHTML = '📦 Dispatching <strong>' + qty + '</strong> units · Stock: <strong>' + avail +
+      '</strong> → <strong style="color:' + clr + '">' + after + '</strong>' +
+      (after < 0 ? ' <span style="color:var(--severe);font-weight:700;">(INSUFFICIENT!)</span>' : '');
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+async function confirmAllocate() {
+  var qty    = parseInt(document.getElementById('alloc-qty').value) || 0;
+  var date   = document.getElementById('alloc-date').value;
+  var rid    = document.getElementById('alloc-resource-id').value;
+  var cid    = document.getElementById('alloc-camp-id').value;
+  var sidRaw = document.getElementById('alloc-shortage-id').value;
+  var sid    = (sidRaw && parseInt(sidRaw) > 0) ? parseInt(sidRaw) : null;
+
+  if (!qty || qty < 1)    { showToast('Enter a valid quantity', 'error'); return; }
+  if (!date)              { showToast('Select allocation date', 'error'); return; }
+  if (!rid || !cid)       { showToast('Missing resource or camp info', 'error'); return; }
+
+  var btn = document.getElementById('alloc-submit-btn');
+  var oldHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = 'Dispatching…';
+
+  try {
+    var payload = {
+      resource_id: parseInt(rid), camp_id: parseInt(cid),
+      quantity_dispatched: qty, allocation_date: date
+    };
+    if (sid) payload.shortage_id = sid;
+
+    var result = await callAPI('/allocations', 'POST', payload);
+    closeModal('alloc-overlay');
+
+    // Refresh data
+    await Promise.all([loadShortages(), loadResources(), loadStats()]);
+
+    // ── FIX #5: auto-switch shortage filter to "Allocated" so admin sees the result ──
+    filterShortages('Allocated', document.querySelector('#shortage-filter .chip:nth-child(2)'));
+
+    var allocId = result.allocation_id || '';
+    var idStr   = allocId ? ' (AL-' + String(allocId).padStart(3,'0') + ')' : '';
+    showToast(
+      '✅ Dispatched' + idStr + ' — awaiting volunteer confirmation · ' +
+      '<a href="resource-allocation.html" style="color:#4ade80;text-decoration:underline">View Allocations →</a>'
+    );
+
+  } catch(e) {
+    showToast(e.message || 'Allocation failed', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = oldHTML;
+  }
+}
+
+// ── DONATION FILTER ──
+function filterDonations(status, chipEl) {
+  currentDonationFilter = status;
+  document.querySelectorAll('#donation-filter .chip').forEach(function(c) { c.classList.remove('active'); });
+  if (chipEl) chipEl.classList.add('active');
+  renderDonations();
+}
+
+async function loadDonations() {
+  try {
+    var d = await callAPI('/donations');
+    allDonations = d.donations || [];
+    renderDonations();
+  } catch(e) {
+    document.getElementById('donation-tbody').innerHTML =
+      '<tr><td colspan="8" class="empty-row"><div class="empty-icon">🔌</div>Cannot reach Flask server</td></tr>';
+  }
+}
+
+function renderDonations() {
+  var list = currentDonationFilter === 'all'
+    ? allDonations
+    : allDonations.filter(function(d) { return d.status === currentDonationFilter; });
+  var tbody = document.getElementById('donation-tbody');
+  if (!list.length) {
+    var msgs = {Pending:'No pending donation applications ✅',Completed:'No accepted donations',Rejected:'No rejected donations',all:'No donations found'};
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row"><div class="empty-icon">💳</div>' + (msgs[currentDonationFilter]||'No data') + '</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(function(d) {
+    var statusClass = d.status === 'Completed' ? 'pill-accepted' : d.status === 'Rejected' ? 'pill-rejected' : 'pill-pending';
+    var statusLabel = d.status === 'Completed' ? 'Accepted' : d.status;
+    var effectCell  = d.status === 'Completed'
+      ? '<span class="diff diff-up">▲ +' + d.quantity + ' ' + esc(d.unit||'') + '</span>'
+      : d.status === 'Pending'
+        ? '<span class="diff" style="background:#f3f4f6;color:var(--muted);">— Pending</span>'
+        : '<span style="font-size:11px;color:var(--muted);">No change</span>';
+    var actionBtns = d.status === 'Pending'
+      ? '<button class="btn btn-success btn-xs" onclick="acceptDonation(' + d.donation_id + ',' + d.quantity + ',\'' + esc(d.resource_name) + '\')">✓ Accept</button>' +
+        '<button class="btn btn-danger btn-xs"  onclick="rejectDonation(' + d.donation_id + ')">✕ Reject</button>'
+      : '<span style="font-size:11px;color:var(--muted);">' + esc(d.accepted_by_name||'—') + '</span>';
+    return '<tr>' +
+      '<td style="font-weight:600">' + esc(d.donor_name) + '</td>' +
+      '<td>' + esc(d.resource_name) + '</td>' +
+      '<td class="num-col" style="font-weight:700;color:var(--green)">' + d.quantity + ' <span style="font-size:11px;font-weight:400;color:var(--muted)">' + esc(d.unit||'') + '</span></td>' +
+      '<td style="font-size:12px;white-space:nowrap">' + esc(d.donation_date) + '</td>' +
+      '<td style="font-size:12px;color:var(--muted);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(d.remarks||'—') + '</td>' +
+      '<td><span class="pill ' + statusClass + '"><span class="dot"></span>' + statusLabel + '</span></td>' +
+      '<td>' + effectCell + '</td>' +
+      '<td><div class="actions">' + actionBtns + '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+async function acceptDonation(id, qty, resName) {
+  if (!confirm('Accept donation of ' + qty + ' units of ' + resName + '?\n\nInventory will increase by ' + qty + ' units.')) return;
+  try {
+    await callAPI('/donations/' + id + '/accept', 'PUT');
+    showToast('✅ Donation accepted — +' + qty + ' units added to inventory');
+    await Promise.all([loadDonations(), loadResources(), loadStats()]);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function rejectDonation(id) {
+  if (!confirm('Reject this donation? No inventory change will be made.')) return;
+  try {
+    await callAPI('/donations/' + id + '/reject', 'PUT');
+    showToast('Donation rejected — no inventory change');
+    await Promise.all([loadDonations(), loadStats()]);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ── RESOURCES ──
+async function loadResources() {
+  try {
+    var d = await callAPI('/resources');
+    allResources = d.resources || [];
+    var cats = [...new Set(allResources.map(function(r) { return r.category; }))].sort();
+    var sel  = document.getElementById('res-category');
+    sel.innerHTML = '<option value="">All Categories</option>';
+    cats.forEach(function(c) { var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o); });
+    renderResources();
+  } catch(e) {
+    document.getElementById('resource-grid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">⚠️ Could not load resources.</div>';
+  }
+}
+
+function renderResources() {
+  var q   = (document.getElementById('res-search').value||'').toLowerCase();
+  var cat = document.getElementById('res-category').value;
+  var list = allResources.filter(function(r) {
+    return (!q || r.resource_name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q)) &&
+           (!cat || r.category === cat);
+  });
+  var grid = document.getElementById('resource-grid');
+  if (!list.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">📦 No resources found</div>';
+    return;
+  }
+  grid.innerHTML = list.map(function(r) {
+    var pct   = r.min_threshold > 0 ? Math.min(100, Math.round((r.quantity_available / (r.min_threshold*3))*100)) : 50;
+    var cls   = r.quantity_available <= 0 ? 'low' : r.quantity_available <= r.min_threshold ? 'warn' : 'ok';
+    var clrCls= cls === 'ok' ? 'color:var(--green)' : cls === 'warn' ? 'color:var(--high)' : 'color:var(--severe)';
+    var badge = cls === 'low'
+      ? '<span class="pill pill-rejected" style="font-size:10px;padding:1px 6px;">Out of Stock</span>'
+      : cls === 'warn'
+        ? '<span class="pill pill-pending" style="font-size:10px;padding:1px 6px;">Low Stock</span>'
+        : '';
+    return '<div class="res-card">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">' +
+        '<div><div class="res-name">' + esc(r.resource_name) + '</div>' +
+             '<div class="res-category">' + esc(r.category) + '</div></div>' + badge +
+      '</div>' +
+      '<div class="res-qty-bar"><div class="res-qty-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+      '<div style="display:flex;align-items:baseline;gap:4px;">' +
+        '<div class="res-qty-num" style="' + clrCls + '">' + r.quantity_available + '</div>' +
+        '<div class="res-qty-unit">' + esc(r.unit) + '</div>' +
+      '</div>' +
+      '<div class="res-threshold">Min threshold: ' + r.min_threshold + ' ' + esc(r.unit) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── EDIT PROFILE ──
+function openEditProfile() {
+  document.getElementById('e-name').value     = document.getElementById('p-name').textContent;
+  document.getElementById('e-email').value    = document.getElementById('p-email').textContent;
+  document.getElementById('e-phone').value    = document.getElementById('p-phone').textContent === '—' ? '' : document.getElementById('p-phone').textContent;
+  document.getElementById('e-org').value      = '';
+  document.getElementById('e-password').value = '';
+  openModal('edit-overlay');
+}
+
+async function saveProfile() {
+  var name  = document.getElementById('e-name').value.trim();
+  var phone = document.getElementById('e-phone').value.trim();
+  var org   = document.getElementById('e-org').value.trim();
+  var pw    = document.getElementById('e-password').value;
+  if (!name) { showToast('Name is required', 'error'); return; }
+  try {
+    var payload = { full_name:name, phone:phone, organization:org };
+    if (pw) payload.password = pw;
+    await callAPI('/profile', 'PUT', payload);
+    localStorage.setItem('ro_name', name);
+    document.getElementById('p-name').textContent  = name;
+    document.getElementById('p-phone').textContent = phone || '—';
+    document.getElementById('sb-name').textContent = name;
+    document.getElementById('p-avatar').textContent = name.substring(0,2).toUpperCase();
+    document.getElementById('sb-av').textContent    = name.substring(0,2).toUpperCase();
+    showToast('Profile updated ✓');
+    closeModal('edit-overlay');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ── REFRESH ALL ──
+async function refreshAll() {
+  showToast('Refreshing data…', 'warn');
+  await Promise.all([loadProfile(), loadStats(), loadShortages(), loadDonations(), loadResources()]);
+  showToast('Data refreshed ✓');
+}
+
+// ── INIT ──
+loadProfile();
+loadStats();
+loadShortages();
+loadDonations();
+loadResources();
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Donor Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f8;--white:#fff;--border:#e2e6f0;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+  --severe:#ef4444;--severe-bg:#fef2f2;--severe-bd:#fecaca;
+  --high:#f59e0b;--high-bg:#fffbeb;--high-bd:#fde68a;
+  --moderate:#3b82f6;--moderate-bg:#eff6ff;--moderate-bd:#bfdbfe;
+  --green:#10b981;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --accent:#2563eb;--accent2:#1d4ed8;--purple:#7c3aed;
+  --sh:0 1px 3px rgba(0,0,0,.07);--sh-md:0 4px 16px rgba(0,0,0,.08);--sh-lg:0 12px 40px rgba(0,0,0,.13);
+  --sidebar-w:240px;--header-h:58px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;}
+.sidebar-logo{height:var(--header-h);display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--border);}
+.logo-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-size:15px;}
+.brand{font-size:15px;font-weight:600;} .brand em{color:var(--accent);font-style:normal;}
+.nav-section{padding:14px 12px 6px;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);transition:background .15s,color .15s;text-decoration:none;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:#eff6ff;color:var(--accent);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);}
+.user-pill{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--bg);margin-bottom:8px;}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:600;display:grid;place-items:center;flex-shrink:0;}
+.u-name{font-size:12.5px;font-weight:600;} .u-role-lbl{font-size:11px;color:var(--muted);}
+.logout-btn{display:flex;align-items:center;gap:7px;width:100%;padding:7px 10px;border:none;background:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;}
+.logout-btn:hover{background:var(--severe-bg);color:var(--severe);}
+.logout-btn svg{width:14px;height:14px;}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:var(--sh);}
+.topbar-title{font-size:15px;font-weight:600;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{padding:24px 28px 40px;flex:1;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:var(--accent2);}
+.btn-success{background:var(--green);color:#fff;} .btn-success:hover{background:#059669;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);} .btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.pill-pending{background:var(--high-bg);color:var(--high);border:1px solid var(--high-bd);}
+.pill-accepted{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.pill-rejected{background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd);}
+.profile-header{background:linear-gradient(135deg,var(--green),#059669);border-radius:12px;padding:24px;margin-bottom:22px;box-shadow:var(--sh-md);display:flex;align-items:center;gap:20px;}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff;flex-shrink:0;}
+.profile-info h2{font-size:20px;font-weight:600;color:#fff;margin-bottom:4px;}
+.profile-info .role-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#fff;}
+.profile-info .meta{font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+.stat-box{background:var(--white);border:1px solid var(--border);border-radius:11px;padding:16px 18px;box-shadow:var(--sh);text-align:center;}
+.stat-box-val{font-size:28px;font-weight:600;line-height:1;}
+.stat-box-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--sh);margin-bottom:22px;}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbff;}
+.card-title{font-size:13.5px;font-weight:600;}
+.card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;}
+td{padding:11px 16px;border-bottom:1px solid #f1f4fa;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#f8f9ff;}
+.empty-row{text-align:center;color:var(--muted);font-size:13px;padding:32px;}
+.sec-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sec-title::before{content:'';width:3px;height:17px;background:var(--green);border-radius:2px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:13px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.modal-close:hover{background:var(--bg);}
+.modal-close svg{width:16px;height:16px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:8px;background:#fafbff;border-radius:0 0 13px 13px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.span2{grid-column:1/-1;}
+.fl{font-size:12px;font-weight:600;color:var(--text);}
+.fl .req{color:var(--severe);margin-left:2px;}
+.fi{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+.fi::placeholder{color:#c0c7d4;}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-right:32px;}
+.form-hint{font-size:11px;color:var(--muted);}
+.info-box{padding:11px 15px;border-radius:8px;font-size:12.5px;display:flex;align-items:flex-start;gap:9px;margin-bottom:14px;}
+.info-box svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;}
+.info-box.green{background:var(--green-bg);color:#065f46;border:1px solid var(--green-bd);}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1d23;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:9999;display:none;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{display:flex;animation:slideUp .22s ease;}
+.toast svg{width:15px;height:15px;flex-shrink:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-mark">🛡️</div><div class="brand">Relief<em>Ops</em></div></div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Donor</div>
+    <a class="nav-item active" href="donor-portal.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>My Profile</a>
+    <a class="nav-item" href="resource-list.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>View Resources</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill"><div class="u-av" id="sb-av">DO</div><div><div class="u-name" id="sb-name">Donor</div><div class="u-role-lbl">Donor</div></div></div>
+    <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">Donor Profile</div>
+    <div class="topbar-right">
+      <button class="btn btn-success" onclick="openDonate()">💚 Donate Resources</button>
+      <button class="btn btn-primary" onclick="openEditProfile()">✏️ Edit Profile</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="p-avatar">DO</div>
+      <div class="profile-info">
+        <h2 id="p-name">Loading…</h2>
+        <div class="role-tag">💚 Donor</div>
+        <div class="meta">
+          <span>📧 <span id="p-email">—</span></span>
+          <span>📱 <span id="p-phone">—</span></span>
+          <span>🏢 <span id="p-org">—</span></span>
+          <span>📅 Joined: <span id="p-joined">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-box-val" id="s-total" style="color:var(--green)">0</div><div class="stat-box-lbl">Total Donated</div></div>
+      <div class="stat-box"><div class="stat-box-val" id="s-count" style="color:var(--accent)">0</div><div class="stat-box-lbl">Donations Made</div></div>
+      <div class="stat-box"><div class="stat-box-val" id="s-pending" style="color:var(--high)">0</div><div class="stat-box-lbl">Pending</div></div>
+    </div>
+
+    <!-- DONATION HISTORY -->
+    <div class="sec-title">📋 My Donation History</div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">All Donations</div>
+          <div class="card-sub">Donations go to admin for approval → added to resource pool on acceptance</div>
+        </div>
+        <button class="btn btn-success btn-sm" onclick="openDonate()">+ New Donation</button>
+      </div>
+      <table>
+        <thead><tr><th>ID</th><th>Resource</th><th>Quantity</th><th>Date</th><th>Remarks</th><th>Status</th></tr></thead>
+        <tbody id="history-tbody"><tr><td colspan="6" class="empty-row">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- DONATE MODAL -->
+<div class="overlay" id="donate-overlay" onclick="if(event.target===this)closeModal('donate-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Donate Resources</div>
+      <button class="modal-close" onclick="closeModal('donate-overlay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Your donation will be sent to the admin for approval. Once accepted, it will be added to the resource pool and allocated to camps in need.
+      </div>
+      <div class="form-grid">
+        <div class="fg span2">
+          <label class="fl">Resource <span class="req">*</span></label>
+          <select class="fi" id="f-resource" onchange="onResChange()">
+            <option value="">— Select resource to donate —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Quantity <span class="req">*</span></label>
+          <input class="fi" type="number" id="f-qty" min="1" placeholder="e.g. 100">
+        </div>
+        <div class="fg">
+          <label class="fl">Unit</label>
+          <input class="fi" type="text" id="f-unit" readonly placeholder="Auto-filled">
+        </div>
+        <div class="fg span2">
+          <label class="fl">Remarks</label>
+          <input class="fi" type="text" id="f-remarks" placeholder="Any message for the admin (optional)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('donate-overlay')">Cancel</button>
+      <button class="btn btn-success" onclick="submitDonation()">💚 Submit Donation</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="overlay" id="edit-overlay" onclick="if(event.target===this)closeModal('edit-overlay')">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Edit Profile</div>
+      <button class="modal-close" onclick="closeModal('edit-overlay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg span2"><label class="fl">Full Name <span class="req">*</span></label><input class="fi" type="text" id="e-name"></div>
+        <div class="fg"><label class="fl">Phone</label><input class="fi" type="tel" id="e-phone"></div>
+        <div class="fg"><label class="fl">Organization</label><input class="fi" type="text" id="e-org" placeholder="Company / Individual"></div>
+        <div class="fg span2"><label class="fl">Email</label><input class="fi" type="email" id="e-email" readonly style="opacity:.6;cursor:not-allowed"></div>
+        <div class="fg span2"><label class="fl">New Password</label><input class="fi" type="password" id="e-password" placeholder="Leave blank to keep current"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('edit-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg id="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-txt"></span></div>
+
+<script src="auth.js"></script>
+<script>
+var ROLE  = Auth.getRole();
+var UID   = Auth.getId();
+var EMAIL = Auth.getEmail();
+var NAME  = Auth.getName();
+
+// Role guard
+if(ROLE && ROLE !== 'donor'){
+  window.location.href = 'login.html';
+}
+
+Auth.renderUser();
+function showToast(msg,type){ var t=document.getElementById('toast'); document.getElementById('toast-ico').style.color=type==='error'?'#f87171':type==='warn'?'#fbbf24':'#4ade80'; document.getElementById('toast-txt').textContent=msg; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},3200); }
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal('donate-overlay');closeModal('edit-overlay');}});
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function callAPI(path,method,body){
+  var opts={method:method||'GET',headers:{
+    'Content-Type':'application/json',
+    'X-Role':ROLE,
+    'X-User-Id':UID,
+    'X-Email':EMAIL
+  }};
+  if(body) opts.body=JSON.stringify(body);
+  var res=await fetch(API_URL + '/api'+path,opts);
+  var text=await res.text();
+  if(!text) throw new Error('Empty response');
+  var data=JSON.parse(text);
+  if(!res.ok) throw new Error(data.error||'Request failed');
+  return data;
+}
+
+async function loadProfile(){
+  // Fill from localStorage immediately so page isn't blank
+  document.getElementById('p-name').textContent  = NAME || 'Donor';
+  document.getElementById('p-email').textContent = EMAIL || '—';
+  document.getElementById('p-avatar').textContent= (NAME||'DO').substring(0,2).toUpperCase();
+
+  if(!UID){ showToast('Demo mode — log in via Flask to see full profile','warn'); return; }
+  try{
+    var d=await callAPI('/profile');
+    var u=d.user;
+    document.getElementById('p-name').textContent   = u.full_name;
+    document.getElementById('p-email').textContent  = u.email;
+    document.getElementById('p-phone').textContent  = u.phone||'—';
+    document.getElementById('p-org').textContent    = u.organization||'—';
+    document.getElementById('p-joined').textContent = u.joined_date||'—';
+    document.getElementById('p-avatar').textContent = u.full_name.substring(0,2).toUpperCase();
+    document.getElementById('s-total').textContent  = d.total_donated||0;
+    document.getElementById('s-count').textContent  = d.total_donations||0;
+    document.getElementById('s-pending').textContent= d.pending||0;
+  }catch(e){
+    showToast('Could not load profile: '+e.message, 'warn');
+  }
+}
+
+async function loadHistory(){
+  try{
+    var d=await callAPI('/donations/mine');
+    var list=d.donations||[];
+    var tbody=document.getElementById('history-tbody');
+    if(!list.length){tbody.innerHTML='<tr><td colspan="6" class="empty-row">No donations yet. Click "Donate Resources" to get started!</td></tr>';return;}
+    tbody.innerHTML=list.map(function(d){
+      var sc={Pending:'pill-pending',Accepted:'pill-accepted',Rejected:'pill-rejected'}[d.status]||'pill-pending';
+      return '<tr>'+
+        '<td style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--muted)">DN-'+String(d.donation_id).padStart(3,'0')+'</td>'+
+        '<td style="font-weight:600">'+esc(d.resource_name)+'</td>'+
+        '<td style="font-weight:600;color:var(--green)">'+d.quantity+' '+esc(d.unit||'')+'</td>'+
+        '<td style="font-size:12px">'+esc(d.donation_date)+'</td>'+
+        '<td style="font-size:12px;color:var(--muted)">'+esc(d.remarks||'—')+'</td>'+
+        '<td><span class="pill '+sc+'"><span class="dot"></span>'+esc(d.status)+'</span></td>'+
+      '</tr>';
+    }).join('');
+  }catch(e){
+    document.getElementById('history-tbody').innerHTML='<tr><td colspan="6" class="empty-row">Could not load donations. Make sure Flask is running and you are logged in.</td></tr>';
+    showToast(e.message, 'warn');
+  }
+}
+
+var allResources=[];
+async function openDonate(){
+  try{
+    var d=await callAPI('/resources');
+    allResources=d.resources||[];
+    var sel=document.getElementById('f-resource');
+    sel.innerHTML='<option value="">— Select resource to donate —</option>'+allResources.map(function(r){return '<option value="'+r.resource_id+'" data-unit="'+esc(r.unit)+'">'+esc(r.resource_name)+'</option>';}).join('');
+  }catch(e){document.getElementById('f-resource').innerHTML='<option value="">Could not load resources</option>';}
+  document.getElementById('f-qty').value='';
+  document.getElementById('f-unit').value='';
+  document.getElementById('f-remarks').value='';
+  openModal('donate-overlay');
+}
+function onResChange(){
+  var sel=document.getElementById('f-resource');
+  var opt=sel.options[sel.selectedIndex];
+  document.getElementById('f-unit').value=opt&&opt.dataset.unit?opt.dataset.unit:'';
+}
+async function submitDonation(){
+  var res=document.getElementById('f-resource').value;
+  var qty=parseInt(document.getElementById('f-qty').value)||0;
+  var rmk=document.getElementById('f-remarks').value.trim();
+  if(!res||qty<1){showToast('Select a resource and enter quantity','error');return;}
+  try{
+    await callAPI('/donations','POST',{resource_id:res,quantity:qty,remarks:rmk});
+    showToast('Donation submitted! Waiting for admin approval. ✓');
+    closeModal('donate-overlay');
+    loadHistory(); loadProfile();
+  }catch(e){showToast(e.message,'error');}
+}
+
+function openEditProfile(){
+  document.getElementById('e-name').value    = document.getElementById('p-name').textContent;
+  document.getElementById('e-email').value   = document.getElementById('p-email').textContent;
+  document.getElementById('e-phone').value   = document.getElementById('p-phone').textContent==='—'?'':document.getElementById('p-phone').textContent;
+  document.getElementById('e-org').value     = document.getElementById('p-org').textContent==='—'?'':document.getElementById('p-org').textContent;
+  document.getElementById('e-password').value='';
+  openModal('edit-overlay');
+}
+async function saveProfile(){
+  var name=document.getElementById('e-name').value.trim();
+  var phone=document.getElementById('e-phone').value.trim();
+  var org=document.getElementById('e-org').value.trim();
+  var pw=document.getElementById('e-password').value;
+  if(!name){showToast('Name is required','error');return;}
+  try{
+    var payload={full_name:name,phone:phone,organization:org};
+    if(pw) payload.password=pw;
+    await callAPI('/profile','PUT',payload);
+    localStorage.setItem('ro_name',name);
+    document.getElementById('p-name').textContent=name;
+    document.getElementById('sb-name').textContent=name;
+    document.getElementById('p-avatar').textContent=name.substring(0,2).toUpperCase();
+    document.getElementById('sb-av').textContent=name.substring(0,2).toUpperCase();
+    showToast('Profile updated ✓');
+    closeModal('edit-overlay');
+  }catch(e){showToast(e.message,'error');}
+}
+
+loadProfile(); loadHistory();
+</script>
+</body>
+</html>

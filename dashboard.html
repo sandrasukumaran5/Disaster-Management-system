@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliefOps – Dashboard</title>
+<link rel="stylesheet" href="reliefops.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+.map-banner{position:relative;height:400px;background:#dde4ef}
+#india-map{width:100%;height:100%}
+.map-fade{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 55%,var(--bg) 100%);pointer-events:none;z-index:10}
+.map-label-box{position:absolute;top:18px;left:24px;z-index:20;pointer-events:none;background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:10px;padding:11px 16px;box-shadow:var(--sh-md)}
+.map-label-box h1{font-size:15px;font-weight:600}
+.map-label-box p{font-size:11px;color:var(--muted);margin-top:2px}
+.map-leg{position:absolute;bottom:50px;right:14px;z-index:20;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--sh-md)}
+.leg-hd{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:600}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+header.dash-header{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-box{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-name{font-size:17px;font-weight:600}
+.logo-name em{color:var(--accent);font-style:normal}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.alert-pill{display:flex;align-items:center;gap:6px;background:var(--severe-bg);border:1px solid var(--severe-bd);color:var(--severe);padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:var(--severe);animation:dp 1.3s ease infinite}
+@keyframes dp{0%,100%{opacity:1}50%{opacity:.2}}
+.clk{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);background:var(--bg);padding:5px 11px;border-radius:7px;border:1px solid var(--border)}
+.login-btn-hdr{background:var(--accent);color:#fff;padding:7px 16px;border-radius:7px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.login-btn-hdr:hover{background:var(--accent2)}
+.user-chip-hdr{display:flex;align-items:center;gap:8px;background:var(--green-bg);border:1px solid var(--green-bd);padding:4px 12px 4px 4px;border-radius:20px}
+.uch-av{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:grid;place-items:center}
+.uch-name{font-size:13px;font-weight:600}
+.uch-role{font-size:11px;color:var(--muted)}
+.uch-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;margin-left:4px}
+.uch-x:hover{color:var(--severe)}
+/* 7-column stats bar */
+.stats-bar{background:var(--white);border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(7,1fr);box-shadow:var(--sh)}
+.stat-cell{padding:13px 14px;display:flex;align-items:center;gap:10px;border-right:1px solid var(--border);transition:.15s}
+.stat-cell:last-child{border-right:none}
+.stat-cell:hover{background:#f8f9ff}
+.s-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.s-ico.r{background:var(--severe-bg)}.s-ico.g{background:var(--green-bg)}.s-ico.y{background:var(--high-bg)}.s-ico.b{background:var(--moderate-bg)}.s-ico.p{background:#f5f3ff}
+.s-n{font-size:20px;font-weight:700;line-height:1}
+.s-n.r{color:var(--severe)}.s-n.g{color:var(--green)}.s-n.y{color:var(--high)}.s-n.b{color:var(--moderate)}.s-n.p{color:var(--purple)}
+.s-l{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+/* nav tabs */
+.nav-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:2px;overflow-x:auto;position:sticky;top:var(--header-h);z-index:90;box-shadow:var(--sh)}
+.nav-tabs::-webkit-scrollbar{height:0}
+.ntab{display:flex;align-items:center;gap:6px;padding:13px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:.15s;user-select:none;text-decoration:none}
+.ntab:hover{color:var(--text);background:var(--bg)}
+.ntab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.ntab .cnt{background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px}
+.ntab .badge{background:var(--severe);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+/* pages */
+.tab-page{display:none;padding:24px 28px 40px;max-width:1500px;margin:0 auto}
+.tab-page.active{display:block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+/* mini stat cards */
+.mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.mini-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--sh);text-align:center}
+.mini-card-n{font-size:26px;font-weight:700}
+.mini-card-l{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+/* rows */
+.d-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid var(--border);transition:.12s}
+.d-row:last-child{border-bottom:none}
+.d-row:hover{background:#fafbff}
+.d-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--subtle);width:36px;flex-shrink:0}
+.d-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.d-info{flex:1;min-width:0}
+.d-name{font-size:13px;font-weight:600;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-meta{font-size:11px;color:var(--muted)}
+.c-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid var(--border);transition:.12s;cursor:pointer}
+.c-row:last-child{border-bottom:none}
+.c-row:hover{background:#fafbff}
+.c-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.c-dot.ok{background:var(--green)}.c-dot.warn{background:var(--high)}.c-dot.full{background:var(--severe)}
+.c-info{flex:1;min-width:0}
+.c-name{font-size:13px;font-weight:600}
+.c-loc{font-size:11px;color:var(--muted)}
+.c-bar{width:80px;flex-shrink:0}
+.c-bar-top{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px}
+.c-bar-bg{height:5px;background:var(--border);border-radius:4px}
+.c-bar-fill{height:100%;border-radius:4px}
+.r-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--border)}
+.r-row:last-child{border-bottom:none}
+.r-row:hover{background:#fafbff}
+.r-name{flex:1;font-size:13px;font-weight:600}
+.r-cat{font-size:11px;color:var(--muted);display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:1px 7px}
+.r-qty{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;min-width:70px;text-align:right}
+.r-bar{width:66px}
+.dn-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);transition:.12s;cursor:pointer}
+.dn-row:last-child{border-bottom:none}
+.dn-row:hover{background:#fafbff}
+.dn-av{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.dn-info{flex:1}
+.dn-name{font-size:13px;font-weight:600}
+.dn-meta{font-size:11px;color:var(--muted)}
+.dn-count{text-align:right}
+.dn-n{font-size:15px;font-weight:700;color:var(--accent)}
+.dn-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.vol-av{width:34px;height:34px;border-radius:50%;background:var(--purple);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.view-all{font-size:12px;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
+.view-all:hover{text-decoration:underline}
+.don-pending{background:#fffbeb!important}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;display:inline-block;margin-right:3px}
+</style>
+</head>
+<body>
+
+<header class="dash-header">
+  <div class="logo">
+    <div class="logo-box">🛡️</div>
+    <div class="logo-name">Relief<em>Ops</em></div>
+  </div>
+  <div class="hdr-r">
+    <div class="alert-pill"><div class="dot-pulse"></div><span id="alert-count">0</span> Active Alerts</div>
+    <div class="clk" id="clock">--:--:--</div>
+    <div id="auth-area"><button class="login-btn-hdr" onclick="window.location.href='login.html'">Login</button></div>
+  </div>
+</header>
+
+<div class="map-banner">
+  <div id="india-map"></div>
+  <div class="map-fade"></div>
+  <div class="map-label-box"><h1>🗺️ India Disaster Operations Map</h1><p>Click any pin to view disaster details</p></div>
+  <div class="map-leg">
+    <div class="leg-hd">Severity</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--severe)"></div>Severe</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--high)"></div>High</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--moderate)"></div>Moderate</div>
+  </div>
+</div>
+
+<!-- 7-metric stats bar -->
+<div class="stats-bar">
+  <div class="stat-cell"><div class="s-ico r">🚨</div><div><div class="s-n r" id="stat-alerts">0</div><div class="s-l">Active Alerts</div></div></div>
+  <div class="stat-cell"><div class="s-ico g">🏕️</div><div><div class="s-n g" id="stat-camps">0</div><div class="s-l">Active Camps</div></div></div>
+  <div class="stat-cell"><div class="s-ico y">👥</div><div><div class="s-n y" id="stat-victims">0</div><div class="s-l">Victims</div></div></div>
+  <div class="stat-cell"><div class="s-ico b">📦</div><div><div class="s-n b" id="stat-resources">0</div><div class="s-l">Resource Types</div></div></div>
+  <div class="stat-cell"><div class="s-ico p">🙋</div><div><div class="s-n p" id="stat-volunteers">—</div><div class="s-l">Volunteers</div></div></div>
+  <div class="stat-cell"><div class="s-ico g">❤️</div><div><div class="s-n g" id="stat-donors">—</div><div class="s-l">Donors</div></div></div>
+  <div class="stat-cell"><div class="s-ico y">⏳</div><div><div class="s-n y" id="stat-pending">0</div><div class="s-l">Pending</div></div></div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="ntab active" onclick="switchTab('dashboard',this)">🏠 Dashboard</div>
+  <div class="ntab" onclick="window.location.href='disaster-list.html'">⚠️ Disasters <span class="cnt" id="cnt-d">0</span></div>
+  <div class="ntab" onclick="window.location.href='camp-list.html'">🏕️ Camps <span class="cnt" id="cnt-c">0</span></div>
+  <div class="ntab" onclick="window.location.href='resource-list.html'">📦 Resources <span class="cnt" id="cnt-r">0</span></div>
+  <div class="ntab" id="tab-vol-btn"  style="display:none" onclick="window.location.href='volunteer-portal.html'">🙋 Volunteers <span class="cnt" id="cnt-v">0</span></div>
+  <div class="ntab" id="tab-dn-btn"   style="display:none" onclick="window.location.href='donation-list.html'">❤️ Donors <span class="cnt" id="cnt-dn">0</span></div>
+  <div class="ntab" id="tab-don-btn"  style="display:none" onclick="window.location.href='donation-list.html'">🎁 Donations <span class="badge" id="badge-pend" style="display:none">0</span></div>
+  <div class="ntab" id="tab-vol-portal-btn" style="display:none" onclick="window.location.href='volunteer-portal.html'">🙋 My Camp</div>
+  <div class="ntab" id="tab-mine-btn" style="display:none" onclick="window.location.href='donor-portal.html'">💸 My Donations</div>
+  <div class="ntab" id="tab-profile-btn" style="display:none" onclick="window.location.href='admin-profile.html'">👤 My Profile</div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="tab-dashboard" class="tab-page active">
+  <div class="two-col" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">⚠️ Active Disasters</div><div class="card-sub">Most recent events</div></div><a href="disaster-list.html" class="view-all">View All →</a></div>
+      <div id="dash-disasters"><div class="empty-state" style="padding:28px 20px"><p>No disasters yet.</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">🏕️ Active Camps</div><div class="card-sub">Occupancy overview</div></div><a href="camp-list.html" class="view-all">View All →</a></div>
+      <div id="dash-camps"><div class="empty-state" style="padding:28px 20px"><p>No camps yet.</p></div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">📦 Resource Snapshot</div><div class="card-sub">Top items by stock level</div></div><a href="resource-list.html" class="view-all">Manage →</a></div>
+      <div id="dash-resources"><div class="empty-state" style="padding:28px 20px"><p>No resources yet.</p></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title" id="dash-donor-title">❤️ Recent Donors</div><div class="card-sub" id="dash-donor-sub">Latest contributors</div></div><a href="donation-list.html" class="view-all" id="dash-donor-link">View All →</a></div>
+      <div id="dash-donors"><div class="empty-state" style="padding:28px 20px"><p>No donors yet.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DISASTERS ══ -->
+<div id="tab-disasters" class="tab-page">
+  <div class="sec-head"><div class="sec-title">⚠️ All Disasters</div><a href="disaster-list.html" class="btn btn-ghost btn-sm">Open Full Page →</a></div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Type</th><th>Location</th><th>Severity</th><th>Start Date</th><th>Status</th></tr></thead>
+      <tbody id="tab-d-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CAMPS ══ -->
+<div id="tab-camps" class="tab-page">
+  <div class="sec-head"><div class="sec-title">🏕️ Relief Camps</div><a href="camp-list.html" class="btn btn-ghost btn-sm">Open Full Page →</a></div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Camp Name</th><th>Location</th><th>Disaster</th><th>Occupancy</th><th>Capacity</th><th>Status</th></tr></thead>
+      <tbody id="tab-c-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ RESOURCES ══ -->
+<div id="tab-resources" class="tab-page">
+  <div class="sec-head">
+    <div class="sec-title">📦 Resource Inventory</div>
+    <div style="display:flex;gap:8px"><a href="resource-list.html" class="btn btn-primary btn-sm">Manage →</a><a href="resource-allocation.html" class="btn btn-ghost btn-sm">Allocations →</a></div>
+  </div>
+  <div class="mini-cards">
+    <div class="mini-card"><div class="mini-card-n" id="rc-total" style="color:var(--accent)">—</div><div class="mini-card-l">Total Types</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="rc-ok" style="color:var(--green)">—</div><div class="mini-card-l">Adequate</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="rc-low" style="color:var(--high)">—</div><div class="mini-card-l">Low Stock</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="rc-crit" style="color:var(--severe)">—</div><div class="mini-card-l">Critical</div></div>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Resource</th><th>Category</th><th>Unit</th><th>Available</th><th>Min Threshold</th><th>Status</th></tr></thead>
+      <tbody id="tab-r-body"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ VOLUNTEERS ══ -->
+<div id="tab-volunteers" class="tab-page">
+  <div class="sec-head"><div class="sec-title">🙋 Volunteers</div></div>
+  <div class="mini-cards">
+    <div class="mini-card"><div class="mini-card-n" id="vc-total" style="color:var(--purple)">—</div><div class="mini-card-l">Total</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="vc-orgs" style="color:var(--accent)">—</div><div class="mini-card-l">Organizations</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="vc-phone" style="color:var(--green)">—</div><div class="mini-card-l">With Phone</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="vc-recent" style="color:var(--high)">—</div><div class="mini-card-l">This Month</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">All Volunteers</div>
+      <div class="search-box" style="min-width:200px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="vol-search" placeholder="Search volunteers…" oninput="filterVol()" style="border:none;outline:none;font-family:inherit;font-size:13px;background:transparent;width:100%">
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Organization</th><th>Joined</th></tr></thead>
+      <tbody id="tab-v-body"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ DONORS ══ -->
+<div id="tab-donors" class="tab-page">
+  <div class="sec-head"><div class="sec-title">❤️ Donors</div><a href="donation-list.html" class="btn btn-ghost btn-sm">Full Donation Manager →</a></div>
+  <div class="mini-cards">
+    <div class="mini-card"><div class="mini-card-n" id="dc-total" style="color:var(--green)">—</div><div class="mini-card-l">Total Donors</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="dc-all" style="color:var(--accent)">—</div><div class="mini-card-l">Total Donations</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="dc-pend" style="color:var(--high)">—</div><div class="mini-card-l">Pending</div></div>
+    <div class="mini-card"><div class="mini-card-n" id="dc-approved" style="color:var(--green)">—</div><div class="mini-card-l">Approved</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">All Donors</div>
+        <div class="search-box" style="min-width:170px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="dn-search" placeholder="Search…" oninput="filterDn()" style="border:none;outline:none;font-family:inherit;font-size:13px;background:transparent;width:100%">
+        </div>
+      </div>
+      <div id="tab-dn-body" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">⏳ Pending Donations</div><div class="card-sub">Awaiting approval</div></div><a href="donation-list.html" class="view-all">Manage →</a></div>
+      <div id="tab-pend-body" style="max-height:400px;overflow-y:auto"><div class="empty-state" style="padding:28px 20px"><p>No pending donations.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DONATIONS ══ -->
+<div id="tab-donations" class="tab-page">
+  <div class="sec-head"><div class="sec-title">🎁 All Donations</div><a href="donation-list.html" class="btn btn-primary btn-sm">Open Full Manager →</a></div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Donor</th><th>Resource</th><th>Qty</th><th>Date</th><th>Remarks</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="tab-don-body"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span id="toast-txt"></span></div>
+
+<script src="auth.js"></script>
+<script>
+const API='http://localhost:5001';
+(function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-IN',{hour12:false});setTimeout(tick,1000);})();
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function sevClass(s){return{Severe:'pill pill-severe',High:'pill pill-high',Medium:'pill pill-moderate',Low:'pill pill-low'}[s]||'pill';}
+function stClass(s){return{Active:'pill pill-active',Closed:'pill pill-closed',Monitoring:'pill pill-monitoring',Full:'pill pill-full'}[s]||'pill';}
+function showToast(m){const t=document.getElementById('toast');document.getElementById('toast-txt').textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+
+const role=Auth.getRole(), uname=Auth.getName(), uid=Auth.getId();
+let allVols=[], allDonors=[], allDons=[];
+
+/* AUTH CHIP */
+(function(){
+  if(!Auth.isLoggedIn()) return;
+  const lbl={admin:'Administrator',volunteer:'Volunteer',donor:'Donor'}[role]||role;
+  document.getElementById('auth-area').innerHTML=
+    '<div class="user-chip-hdr">'+
+      '<div class="uch-av">'+(uname?uname.substring(0,2).toUpperCase():'??')+'</div>'+
+      '<div style="line-height:1.2"><div class="uch-name">'+esc(uname)+'</div><div class="uch-role">'+lbl+'</div></div>'+
+      '<button class="uch-x" onclick="logout()" title="Logout">⏻</button>'+
+    '</div>';
+  if(role==='admin'){
+    document.getElementById('tab-vol-btn').style.display='';
+    document.getElementById('tab-dn-btn').style.display='';
+    document.getElementById('tab-don-btn').style.display='';
+  }
+  if(role==='volunteer'){
+    document.getElementById('tab-vol-portal-btn').style.display='';
+  }
+  if(role==='admin'){
+    document.getElementById('tab-profile-btn').style.display='';
+  }
+  if(role==='donor'){
+    document.getElementById('tab-mine-btn').style.display='';
+    document.getElementById('dash-donor-title').textContent='💸 My Donations';
+    document.getElementById('dash-donor-sub').textContent='Your recent contributions';
+    document.getElementById('dash-donor-link').href='donor-portal.html';
+  }
+})();
+
+/* MAP */
+window.addEventListener('load',function(){
+  try{
+    var map=L.map('india-map',{center:[23,82],zoom:5,zoomControl:true,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+    var cols={Severe:'#ef4444',High:'#f59e0b',Medium:'#3b82f6',Low:'#10b981'};
+    var sz={Severe:16,High:13,Medium:11,Low:10};
+    function pin(d){
+      if(!d.lat||!d.lng) return;
+      var c=cols[d.severity_level]||'#6b7280',s=sz[d.severity_level]||11,t=s*2+14;
+      var icon=L.divIcon({className:'',html:'<div style="position:relative;width:'+t+'px;height:'+t+'px"><div style="position:absolute;top:50%;left:50%;width:'+(s+10)+'px;height:'+(s+10)+'px;border-radius:50%;background:'+c+'33;transform:translate(-50%,-50%);animation:rp 2s infinite"></div><div style="position:absolute;top:50%;left:50%;width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+c+';border:2.5px solid #fff;box-shadow:0 2px 8px '+c+'66;transform:translate(-50%,-50%)"></div></div>',iconSize:[t,t],iconAnchor:[t/2,t/2]});
+      L.marker([d.lat,d.lng],{icon}).addTo(map).bindPopup('<div style="font-family:IBM Plex Sans,sans-serif;min-width:160px;padding:2px"><b style="font-size:13px">'+esc(d.disaster_name)+'</b><div style="font-size:11px;color:#6b7280;margin:3px 0">'+esc(d.location)+'</div><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:'+c+'22;color:'+c+';border:1px solid '+c+'44;text-transform:uppercase">'+d.severity_level+'</span></div>',{maxWidth:220});
+    }
+    fetch(API+'/api/disasters').then(r=>r.json()).then(d=>(d.disasters||[]).forEach(pin)).catch(()=>{});
+  }catch(e){document.getElementById('india-map').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;font-size:14px">🌐 Map needs internet</div>';}
+});
+
+/* STATS */
+async function loadStats(){
+  try{
+    const d=await(await fetch(API+'/api/stats')).json();
+    document.getElementById('stat-alerts').textContent=d.active_disasters||0;
+    document.getElementById('stat-camps').textContent=d.active_camps||0;
+    document.getElementById('stat-victims').textContent=(d.total_victims||0).toLocaleString();
+    document.getElementById('stat-resources').textContent=d.resource_types||0;
+    document.getElementById('stat-pending').textContent=d.pending_donations||0;
+    document.getElementById('alert-count').textContent=d.active_disasters||0;
+    document.getElementById('cnt-d').textContent=d.total_disasters||0;
+    document.getElementById('cnt-c').textContent=d.total_camps||0;
+    document.getElementById('cnt-r').textContent=d.resource_types||0;
+    if((d.pending_donations||0)>0){document.getElementById('badge-pend').style.display='';document.getElementById('badge-pend').textContent=d.pending_donations;}
+  }catch(e){}
+}
+
+async function loadAdminCounts(){
+  if(role!=='admin') return;
+  try{
+    const d=await(await fetch(API+'/api/users?role=volunteer',{headers:{'X-Role':role}})).json();
+    allVols=d.users||[];
+    document.getElementById('stat-volunteers').textContent=allVols.length;
+    document.getElementById('cnt-v').textContent=allVols.length;
+  }catch(e){}
+  try{
+    const d=await(await fetch(API+'/api/donors',{headers:{'X-Role':role}})).json();
+    allDonors=d.donors||[];
+    document.getElementById('stat-donors').textContent=allDonors.length;
+    document.getElementById('cnt-dn').textContent=allDonors.length;
+  }catch(e){}
+}
+
+/* DASH WIDGETS */
+async function loadDashDisasters(){
+  try{
+    const d=await(await fetch(API+'/api/disasters?limit=5')).json();
+    const list=d.disasters||[];
+    if(!list.length) return;
+    const icons={Severe:'🌊',High:'☀️',Medium:'🌧️',Low:'🌿'};
+    document.getElementById('dash-disasters').innerHTML=list.map(x=>
+      '<div class="d-row">'+
+        '<div class="d-num">#D'+String(x.disaster_id).padStart(3,'0')+'</div>'+
+        '<div class="d-ico" style="background:var(--'+(x.severity_level==='Severe'?'severe':x.severity_level==='High'?'high':'moderate')+'-bg)">'+(icons[x.severity_level]||'⚠️')+'</div>'+
+        '<div class="d-info"><div class="d-name">'+esc(x.disaster_name)+'</div><div class="d-meta">'+esc(x.location)+' · '+esc(x.start_date)+'</div></div>'+
+        '<span class="'+sevClass(x.severity_level)+'">'+esc(x.severity_level)+'</span>'+
+      '</div>'
+    ).join('');
+  }catch(e){}
+}
+
+async function loadDashCamps(){
+  try{
+    const d=await(await fetch(API+'/api/camps?limit=6')).json();
+    const list=d.camps||[];
+    if(!list.length) return;
+    document.getElementById('dash-camps').innerHTML=list.map(x=>{
+      var pct=x.total_capacity>0?Math.round(x.current_occupancy/x.total_capacity*100):0;
+      var bc=pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)';
+      var dc=pct>=90?'full':pct>=70?'warn':'ok';
+      return '<div class="c-row" onclick="window.location.href=\'camp-detail.html?id='+x.camp_id+'\'">'+
+        '<div class="c-dot '+dc+'"></div>'+
+        '<div class="c-info"><div class="c-name">'+esc(x.camp_name)+'</div><div class="c-loc">'+esc(x.location)+'</div></div>'+
+        '<div class="c-bar"><div class="c-bar-top"><span>'+x.current_occupancy+'</span><span>'+x.total_capacity+'</span></div><div class="c-bar-bg"><div class="c-bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+
+      '</div>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadDashResources(){
+  try{
+    const d=await(await fetch(API+'/api/resources')).json();
+    const list=(d.resources||[]).slice(0,6);
+    if(!list.length) return;
+    document.getElementById('dash-resources').innerHTML=list.map(x=>{
+      const low=x.quantity_available<=0?'crit':x.min_threshold>0&&x.quantity_available<=x.min_threshold?'low':'ok';
+      const col=low==='crit'?'var(--severe)':low==='low'?'var(--high)':'var(--green)';
+      const pct=x.min_threshold>0?Math.min(100,x.quantity_available/(x.min_threshold*2)*100):Math.min(100,x.quantity_available/100*100);
+      return '<div class="r-row">'+
+        '<div class="r-name">'+esc(x.resource_name)+'<br><span class="r-cat">'+esc(x.category)+'</span></div>'+
+        '<div class="r-bar"><div class="c-bar-bg"><div class="c-bar-fill" style="width:'+Math.round(pct)+'%;background:'+col+'"></div></div></div>'+
+        '<div class="r-qty" style="color:'+col+'">'+x.quantity_available.toLocaleString()+' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+esc(x.unit)+'</span></div>'+
+      '</div>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadDashDonors(){
+  if(role==='admin'){
+    try{
+      const d=await(await fetch(API+'/api/donors',{headers:{'X-Role':role}})).json();
+      const list=(d.donors||[]).slice(0,5);
+      if(!list.length){document.getElementById('dash-donors').innerHTML='<div class="empty-state" style="padding:28px 20px"><p>No donors yet.</p></div>';return;}
+      document.getElementById('dash-donors').innerHTML=list.map(x=>
+        '<div class="dn-row" onclick="window.location.href=\'donation-list.html\'">'+
+          '<div class="dn-av">'+x.full_name.charAt(0).toUpperCase()+'</div>'+
+          '<div class="dn-info"><div class="dn-name">'+esc(x.full_name)+'</div><div class="dn-meta">'+esc(x.email)+(x.organization?' · '+esc(x.organization):'')+'</div></div>'+
+          '<div class="dn-count"><div class="dn-n">'+x.total_donations+'</div><div class="dn-l">donations</div></div>'+
+        '</div>'
+      ).join('');
+    }catch(e){}
+  }else if(role==='donor'){
+    try{
+      const d=await(await fetch(API+'/api/donations/mine',{headers:{'X-User-Id':uid,'X-Role':role}})).json();
+      const list=(d.donations||[]).slice(0,5);
+      if(!list.length){document.getElementById('dash-donors').innerHTML='<div class="empty-state" style="padding:28px 20px"><p>No donations yet. <a href="donor-portal.html" style="color:var(--accent)">Donate now →</a></p></div>';return;}
+      document.getElementById('dash-donors').innerHTML=list.map(x=>{
+        const p=x.status==='Completed'?'pill-active':x.status==='Rejected'?'pill-severe':'pill-pending';
+        return '<div class="d-row"><div class="d-info"><div class="d-name">'+esc(x.resource_name)+'</div><div class="d-meta">'+x.quantity+' '+esc(x.unit)+' · '+esc(x.donation_date)+'</div></div><span class="pill '+p+'">'+esc(x.status)+'</span></div>';
+      }).join('');
+    }catch(e){}
+  }
+}
+
+/* TAB LOADERS */
+async function loadTabDisasters(){
+  try{
+    const d=await(await fetch(API+'/api/disasters')).json();
+    const list=d.disasters||[];
+    if(!list.length){document.getElementById('tab-d-body').innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No disasters.</td></tr>';return;}
+    document.getElementById('tab-d-body').innerHTML=list.map(x=>
+      '<tr>'+
+        '<td class="id-mono">#D'+String(x.disaster_id).padStart(3,'0')+'</td>'+
+        '<td><strong>'+esc(x.disaster_name)+'</strong></td>'+
+        '<td style="color:var(--muted)">'+esc(x.disaster_type)+'</td>'+
+        '<td>'+esc(x.location)+'</td>'+
+        '<td><span class="'+sevClass(x.severity_level)+'">'+esc(x.severity_level)+'</span></td>'+
+        '<td style="color:var(--muted);font-size:12px">'+esc(x.start_date)+'</td>'+
+        '<td><span class="'+stClass(x.status)+'">'+esc(x.status)+'</span></td>'+
+      '</tr>'
+    ).join('');
+  }catch(e){}
+}
+
+async function loadTabCamps(){
+  try{
+    const d=await(await fetch(API+'/api/camps')).json();
+    const list=d.camps||[];
+    if(!list.length){document.getElementById('tab-c-body').innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No camps.</td></tr>';return;}
+    document.getElementById('tab-c-body').innerHTML=list.map(x=>{
+      const pct=x.total_capacity>0?Math.round(x.current_occupancy/x.total_capacity*100):0;
+      const bc=pct>=90?'var(--severe)':pct>=70?'var(--high)':'var(--green)';
+      return '<tr>'+
+        '<td class="id-mono">#C'+String(x.camp_id).padStart(3,'0')+'</td>'+
+        '<td><strong style="cursor:pointer;color:var(--accent)" onclick="window.location.href=\'camp-detail.html?id='+x.camp_id+'\'">'+esc(x.camp_name)+'</strong></td>'+
+        '<td>'+esc(x.location)+'</td>'+
+        '<td style="color:var(--muted)">'+esc(x.disaster_name||'—')+'</td>'+
+        '<td><strong>'+x.current_occupancy+'</strong><div class="c-bar-bg" style="margin-top:4px;width:80px"><div class="c-bar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></td>'+
+        '<td style="color:var(--muted)">'+x.total_capacity+'</td>'+
+        '<td><span class="'+stClass(x.status)+'">'+esc(x.status)+'</span></td>'+
+      '</tr>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadTabResources(){
+  try{
+    const d=await(await fetch(API+'/api/resources')).json();
+    const list=d.resources||[];
+    let ok=0,low=0,crit=0;
+    list.forEach(r=>{if(r.quantity_available<=0)crit++;else if(r.min_threshold>0&&r.quantity_available<=r.min_threshold)low++;else ok++;});
+    document.getElementById('rc-total').textContent=list.length;
+    document.getElementById('rc-ok').textContent=ok;
+    document.getElementById('rc-low').textContent=low;
+    document.getElementById('rc-crit').textContent=crit;
+    if(!list.length){document.getElementById('tab-r-body').innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No resources.</td></tr>';return;}
+    document.getElementById('tab-r-body').innerHTML=list.map(x=>{
+      const lv=x.quantity_available<=0?'pill-severe':x.min_threshold>0&&x.quantity_available<=x.min_threshold?'pill-pending':'pill-active';
+      const lb=x.quantity_available<=0?'Critical':x.min_threshold>0&&x.quantity_available<=x.min_threshold?'Low Stock':'OK';
+      return '<tr style="'+(x.quantity_available<=x.min_threshold&&x.min_threshold>0?'background:#fffbeb':'')+'">'+
+        '<td class="id-mono">#'+x.resource_id+'</td>'+
+        '<td><strong>'+esc(x.resource_name)+'</strong></td>'+
+        '<td><span style="background:var(--moderate-bg);color:var(--accent);border:1px solid var(--moderate-bd);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+esc(x.category)+'</span></td>'+
+        '<td style="color:var(--muted)">'+esc(x.unit)+'</td>'+
+        '<td><strong style="font-size:14px">'+x.quantity_available.toLocaleString()+'</strong></td>'+
+        '<td style="color:var(--muted)">'+(x.min_threshold>0?x.min_threshold:'—')+'</td>'+
+        '<td><span class="pill '+lv+'"><span class="dot"></span>'+lb+'</span></td>'+
+      '</tr>';
+    }).join('');
+  }catch(e){}
+}
+
+async function loadTabVolunteers(){
+  if(!allVols.length){
+    try{
+      const d=await(await fetch(API+'/api/users?role=volunteer',{headers:{'X-Role':role}})).json();
+      allVols=d.users||[];
+    }catch(e){}
+  }
+  renderVols(allVols);
+}
+
+function renderVols(list){
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const orgs=new Set(list.filter(v=>v.organization).map(v=>v.organization));
+  document.getElementById('vc-total').textContent=list.length;
+  document.getElementById('vc-orgs').textContent=orgs.size;
+  document.getElementById('vc-phone').textContent=list.filter(v=>v.phone).length;
+  document.getElementById('vc-recent').textContent=list.filter(v=>(v.joined_date||'').startsWith(thisMonth)).length;
+  document.getElementById('stat-volunteers').textContent=list.length;
+  document.getElementById('cnt-v').textContent=list.length;
+  const q=(document.getElementById('vol-search').value||'').toLowerCase();
+  const f=q?list.filter(v=>v.full_name.toLowerCase().includes(q)||(v.email||'').toLowerCase().includes(q)):list;
+  document.getElementById('tab-v-body').innerHTML=!f.length
+    ?'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No volunteers found.</td></tr>'
+    :f.map((x,i)=>'<tr>'+
+      '<td class="id-mono">'+String(i+1).padStart(2,'0')+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:9px"><div class="vol-av">'+x.full_name.charAt(0).toUpperCase()+'</div><strong>'+esc(x.full_name)+'</strong></div></td>'+
+      '<td style="color:var(--muted);font-size:12px">'+esc(x.email)+'</td>'+
+      '<td style="color:var(--muted);font-size:12px">'+esc(x.phone||'—')+'</td>'+
+      '<td style="color:var(--muted);font-size:12px">'+esc(x.organization||'—')+'</td>'+
+      '<td style="color:var(--muted);font-size:12px">'+esc(x.joined_date||'—')+'</td>'+
+    '</tr>').join('');
+}
+function filterVol(){renderVols(allVols);}
+
+async function loadTabDonors(){
+  try{
+    if(!allDonors.length){const d=await(await fetch(API+'/api/donors',{headers:{'X-Role':role}})).json();allDonors=d.donors||[];}
+    if(!allDons.length){const d=await(await fetch(API+'/api/donations',{headers:{'X-Role':role}})).json();allDons=d.donations||[];}
+    const pend=allDons.filter(d=>d.status==='Pending').length;
+    const appr=allDons.filter(d=>d.status==='Completed').length;
+    document.getElementById('dc-total').textContent=allDonors.length;
+    document.getElementById('dc-all').textContent=allDons.length;
+    document.getElementById('dc-pend').textContent=pend;
+    document.getElementById('dc-approved').textContent=appr;
+    document.getElementById('stat-donors').textContent=allDonors.length;
+    document.getElementById('cnt-dn').textContent=allDonors.length;
+    renderDnList(allDonors);
+    renderPending(allDons.filter(d=>d.status==='Pending'));
+  }catch(e){}
+}
+
+function renderDnList(list){
+  const q=(document.getElementById('dn-search').value||'').toLowerCase();
+  const f=q?list.filter(d=>d.full_name.toLowerCase().includes(q)||(d.email||'').toLowerCase().includes(q)):list;
+  document.getElementById('tab-dn-body').innerHTML=!f.length
+    ?'<div class="empty-state" style="padding:28px 20px"><p>No donors.</p></div>'
+    :f.map(x=>'<div class="dn-row" onclick="window.location.href=\'donation-list.html\'">'+
+      '<div class="dn-av">'+x.full_name.charAt(0).toUpperCase()+'</div>'+
+      '<div class="dn-info"><div class="dn-name">'+esc(x.full_name)+'</div><div class="dn-meta">'+esc(x.email)+(x.organization?' · '+esc(x.organization):'')+'</div></div>'+
+      '<div class="dn-count"><div class="dn-n">'+x.total_donations+'</div><div class="dn-l">donations</div></div>'+
+    '</div>').join('');
+}
+function filterDn(){renderDnList(allDonors);}
+
+function renderPending(list){
+  document.getElementById('tab-pend-body').innerHTML=!list.length
+    ?'<div class="empty-state" style="padding:28px 20px"><p>No pending donations 🎉</p></div>'
+    :list.map(x=>'<div class="d-row don-pending">'+
+      '<div class="dn-av" style="background:var(--high);width:30px;height:30px;font-size:11px">'+x.donor_name.charAt(0).toUpperCase()+'</div>'+
+      '<div class="d-info"><div class="d-name">'+esc(x.donor_name)+'</div><div class="d-meta">'+x.quantity+' '+esc(x.unit)+' of '+esc(x.resource_name)+'</div></div>'+
+      '<div style="display:flex;gap:4px;flex-shrink:0">'+
+        '<button class="btn btn-sm" style="background:var(--green-bg);color:#065f46;border:1px solid var(--green-bd)" onclick="appr('+x.donation_id+')">✅</button>'+
+        '<button class="btn btn-sm" style="background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd)" onclick="rej('+x.donation_id+')">❌</button>'+
+      '</div>'+
+    '</div>').join('');
+}
+
+async function loadTabDonations(){
+  try{
+    if(!allDons.length){const d=await(await fetch(API+'/api/donations',{headers:{'X-Role':role}})).json();allDons=d.donations||[];}
+    renderAllDons(allDons);
+  }catch(e){}
+}
+
+function renderAllDons(list){
+  if(!list.length){document.getElementById('tab-don-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No donations.</td></tr>';return;}
+  document.getElementById('tab-don-body').innerHTML=list.map(x=>{
+    const isPend=x.status==='Pending';
+    const p=x.status==='Completed'?'pill-active':x.status==='Rejected'?'pill-severe':'pill-pending';
+    const act=isPend
+      ?'<div style="display:flex;gap:4px"><button class="btn btn-sm" style="background:var(--green-bg);color:#065f46;border:1px solid var(--green-bd)" onclick="appr('+x.donation_id+')">✅ Approve</button><button class="btn btn-sm" style="background:var(--severe-bg);color:var(--severe);border:1px solid var(--severe-bd)" onclick="rej('+x.donation_id+')">❌ Reject</button></div>'
+      :'<span style="color:var(--muted);font-size:12px">—</span>';
+    return '<tr class="'+(isPend?'don-pending':'')+'">'+
+      '<td class="id-mono">#'+x.donation_id+'</td>'+
+      '<td><strong>'+esc(x.donor_name)+'</strong><div style="font-size:11px;color:var(--muted)">'+esc(x.donor_email||'')+'</div></td>'+
+      '<td>'+esc(x.resource_name)+'</td>'+
+      '<td><strong>'+x.quantity+'</strong> '+esc(x.unit)+'</td>'+
+      '<td style="color:var(--muted);font-size:12px">'+esc(x.donation_date)+'</td>'+
+      '<td style="color:var(--muted);font-size:12px;max-width:120px">'+esc(x.remarks||'—')+'</td>'+
+      '<td><span class="pill '+p+'"><span class="dot"></span>'+esc(x.status)+'</span></td>'+
+      '<td>'+act+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+async function appr(id){
+  const r=await fetch(API+'/api/donations/'+id+'/approve',{method:'PUT',headers:{'X-Role':role}});
+  const d=await r.json();
+  if(!r.ok){showToast('❌ '+(d.error||'Error'));return;}
+  showToast('✅ Approved — resource pool updated');
+  allDons=[];loadStats();
+  if(document.getElementById('tab-donors').classList.contains('active'))loadTabDonors();
+  if(document.getElementById('tab-donations').classList.contains('active'))loadTabDonations();
+  loadDashDonors();
+}
+async function rej(id){
+  const r=await fetch(API+'/api/donations/'+id+'/reject',{method:'PUT',headers:{'X-Role':role}});
+  const d=await r.json();
+  if(!r.ok){showToast('❌ '+(d.error||'Error'));return;}
+  showToast('🚫 Donation rejected');
+  allDons=[];loadStats();
+  if(document.getElementById('tab-donors').classList.contains('active'))loadTabDonors();
+  if(document.getElementById('tab-donations').classList.contains('active'))loadTabDonations();
+}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab-page').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  if(id==='disasters')loadTabDisasters();
+  if(id==='camps')loadTabCamps();
+  if(id==='resources')loadTabResources();
+  if(id==='volunteers')loadTabVolunteers();
+  if(id==='donors')loadTabDonors();
+  if(id==='donations')loadTabDonations();
+}
+
+(async()=>{
+  await loadStats();
+  loadDashDisasters();
+  loadDashCamps();
+  loadDashResources();
+  loadDashDonors();
+  if(role==='admin')loadAdminCounts();
+})();
+</script>
+<style>
+@keyframes rp{0%{transform:translate(-50%,-50%) scale(1);opacity:.7}100%{transform:translate(-50%,-50%) scale(2.8);opacity:0}}
+.leaflet-popup-content-wrapper{background:#fff!important;border:1px solid var(--border)!important;border-radius:9px!important;box-shadow:var(--sh-md)!important}
+.leaflet-popup-tip{background:#fff!important}
+</style>
+</body>
+</html>
